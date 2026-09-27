@@ -90,9 +90,11 @@ body.theme-soft-light,
 body.font-size-normal {
   font-size: 16px;
 }
+
 body.font-size-large {
   font-size: 19px;
 }
+
 body.font-size-extra-large {
   font-size: 22px;
 }
@@ -163,12 +165,14 @@ body.reduced-motion *,
   padding-left: 1rem;
   padding-right: 1rem;
 }
+
 @media (min-width: 640px) {
   .container-app {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
 }
+
 @media (min-width: 1024px) {
   .container-app {
     padding-left: 2rem;
@@ -213,6 +217,7 @@ body.reduced-motion *,
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   outline: none;
 }
+
 .form-input:focus {
   border-color: var(--border-accent);
 }
@@ -234,10 +239,12 @@ body.reduced-motion *,
   cursor: pointer;
   transition: all 0.15s ease;
 }
+
 .btn-primary:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
 }
+
 .btn-primary:active {
   transform: translateY(0);
 }
@@ -259,6 +266,7 @@ body.reduced-motion *,
   cursor: pointer;
   transition: all 0.15s ease;
 }
+
 .btn-secondary:hover {
   border-color: var(--border-accent);
   transform: translateY(-1px);
@@ -281,6 +289,7 @@ body.reduced-motion *,
   cursor: pointer;
   transition: all 0.15s ease;
 }
+
 .btn-outline:hover {
   background-color: rgba(255, 230, 0, 0.08);
   transform: translateY(-1px);

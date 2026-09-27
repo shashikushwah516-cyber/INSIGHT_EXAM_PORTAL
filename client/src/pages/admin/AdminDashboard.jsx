@@ -17,7 +17,7 @@ import {
     Clock,
     Award
 } from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import AdminLayout from '../../components/layout/AdminLayout';
 
 export default function AdminDashboard() {
     const [overview, setOverview] = useState(null);
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
     }, []);
 
     return (
-        <DashboardLayout
+        <AdminLayout
             pageTitle="Administrator Control Center"
             pageDescription="Overview of platform assessments, candidate results, question banks, and system metrics."
         >
@@ -286,6 +286,6 @@ export default function AdminDashboard() {
                 </>
             )}
             </div>
-        </DashboardLayout>
+        </AdminLayout>
     );
 }

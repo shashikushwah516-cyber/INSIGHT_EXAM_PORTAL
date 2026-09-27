@@ -18,7 +18,8 @@ import {
     X,
     ChevronRight,
     Bell,
-    Globe as EarthIcon
+    Globe as EarthIcon,
+    Shield
 } from 'lucide-react';
 import KeyboardHelpModal from '../common/KeyboardHelpModal';
 
@@ -65,10 +66,7 @@ export default function DashboardLayout({ children, pageTitle, pageDescription, 
         navItems.push({
             group: 'ADMINISTRATOR CONSOLE',
             items: [
-                { label: 'Admin Overview', path: '/admin', icon: Shield },
-                { label: 'Question Bank', path: '/admin/questions', icon: BookOpen },
-                { label: 'Exam Management', path: '/admin/exams', icon: PlayCircle },
-                { label: 'Candidate Submissions', path: '/admin/attempts', icon: Award }
+                { label: 'Switch to Admin Console', path: '/admin', icon: Shield, badge: 'Admin' }
             ]
         });
     }

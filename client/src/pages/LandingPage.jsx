@@ -63,8 +63,8 @@ export default function LandingPage() {
         <PublicLayout>
             <main id="main-content" className="py-8 sm:py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
-                    {/* 1. HERO SECTION */}
-                    <section className="text-center pt-4 sm:pt-8 pb-12 sm:pb-16 bg-gradient-to-b from-neutral-900/90 to-neutral-950 border-2 border-neutral-800 rounded-3xl p-6 sm:p-12 shadow-2xl relative overflow-hidden">
+                    {/* 1. HERO & KEY FEATURES SECTION */}
+                    <section id="features" className="text-center pt-4 sm:pt-8 pb-12 sm:pb-16 bg-gradient-to-b from-neutral-900/90 to-neutral-950 border-2 border-neutral-800 rounded-3xl p-6 sm:p-12 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-96 h-96 bg-[#ffe600]/5 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -129,7 +129,7 @@ export default function LandingPage() {
                     </section>
 
                     {/* 2. HOW IT WORKS (STEP-BY-STEP) */}
-                    <section aria-labelledby="how-it-works-title">
+                    <section id="how-it-works" aria-labelledby="how-it-works-title">
                         <div className="text-center max-w-3xl mx-auto mb-12">
                             <span className="text-xs font-bold uppercase tracking-wider text-[#ffe600] block mb-2">
                                 Seamless Candidate Journey
@@ -186,7 +186,7 @@ export default function LandingPage() {
                     </section>
 
                     {/* 3. CORE ACCESSIBILITY PILLARS */}
-                    <section aria-labelledby="pillars-title">
+                    <section id="accessibility" aria-labelledby="pillars-title">
                         <div className="text-center max-w-3xl mx-auto mb-12">
                             <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 block mb-2">
                                 Universal Design Architecture
@@ -243,7 +243,7 @@ export default function LandingPage() {
                     </section>
 
                     {/* 4. EXAMINATION MODULES & PRACTICE OVERVIEW */}
-                    <section className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-10" aria-labelledby="modules-title">
+                    <section id="exams-info" className="bg-neutral-900/70 border border-neutral-800 rounded-3xl p-6 sm:p-10" aria-labelledby="modules-title">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-8 pb-6 border-b border-neutral-800">
                             <div>
                                 <span className="text-xs font-bold uppercase tracking-wider text-[#ffe600] block mb-1">
@@ -297,7 +297,7 @@ export default function LandingPage() {
                     </section>
 
                     {/* 5. FREQUENTLY ASKED QUESTIONS */}
-                    <section aria-labelledby="faq-title" className="max-w-4xl mx-auto">
+                    <section id="faq" aria-labelledby="faq-title" className="max-w-4xl mx-auto">
                         <div className="text-center mb-10">
                             <span className="text-xs font-bold uppercase tracking-wider text-[#ffe600] block mb-2">
                                 Support & Guidance

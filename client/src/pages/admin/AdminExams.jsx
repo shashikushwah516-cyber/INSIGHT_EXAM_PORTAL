@@ -13,7 +13,7 @@ import {
     Award,
     CheckCircle2
 } from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import AdminLayout from '../../components/layout/AdminLayout';
 
 export default function AdminExams() {
     const [exams, setExams] = useState([]);
@@ -166,7 +166,7 @@ export default function AdminExams() {
     };
 
     return (
-        <DashboardLayout
+        <AdminLayout
             pageTitle="Competitive Exam Management"
             pageDescription="Assemble question sets into official timed examinations for candidates."
         >
@@ -428,6 +428,6 @@ export default function AdminExams() {
                 </div>
             )}
             </div>
-        </DashboardLayout>
+        </AdminLayout>
     );
 }

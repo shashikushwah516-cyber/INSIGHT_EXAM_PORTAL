@@ -8,7 +8,7 @@ import {
     Award,
     CheckCircle2
 } from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import AdminLayout from '../../components/layout/AdminLayout';
 
 export default function AdminAttempts() {
     const [overview, setOverview] = useState(null);
@@ -34,7 +34,7 @@ export default function AdminAttempts() {
     const attempts = overview?.recentAttempts || [];
 
     return (
-        <DashboardLayout
+        <AdminLayout
             pageTitle="Candidate Assessment Monitoring"
             pageDescription="Log of submitted examinations, candidate results, and verification records."
         >
@@ -93,6 +93,6 @@ export default function AdminAttempts() {
                 </div>
             )}
             </div>
-        </DashboardLayout>
+        </AdminLayout>
     );
 }

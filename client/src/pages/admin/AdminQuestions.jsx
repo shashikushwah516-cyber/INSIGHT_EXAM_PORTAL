@@ -11,7 +11,7 @@ import {
     AlertCircle,
     CheckCircle2
 } from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import AdminLayout from '../../components/layout/AdminLayout';
 
 export default function AdminQuestions() {
     const [questions, setQuestions] = useState([]);
@@ -134,7 +134,7 @@ export default function AdminQuestions() {
     };
 
     return (
-        <DashboardLayout
+        <AdminLayout
             pageTitle="Question Bank Management"
             pageDescription="Repository of questions with multi-subject categorization, explanations, and accessibility audio cues."
         >
@@ -458,6 +458,6 @@ export default function AdminQuestions() {
                 </div>
             )}
             </div>
-        </DashboardLayout>
+        </AdminLayout>
     );
 }
