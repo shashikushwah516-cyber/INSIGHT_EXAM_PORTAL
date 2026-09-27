@@ -17,6 +17,7 @@ import {
     Filter
 } from 'lucide-react';
 import KeyboardHelpModal from '../components/common/KeyboardHelpModal';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function PracticePortal() {
     const { speak, cancel } = useSpeech();
@@ -174,9 +175,13 @@ export default function PracticePortal() {
             : 0;
 
     return (
-        <main id="main-content" className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            {/* Header & Filter Controls */}
-            <div className="bg-neutral-900 border-2 border-neutral-800 rounded-2xl p-6 mb-8 shadow-xl">
+        <DashboardLayout
+            pageTitle="Interactive Subject Practice"
+            pageDescription="Instant answer verification, audible solutions, and accuracy tracking."
+        >
+            <div className="space-y-6">
+                {/* Header & Filter Controls */}
+                <div className="panel-card bg-neutral-900 border-neutral-800">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-800 mb-6">
                     <div className="flex items-center gap-3">
                         <BookOpen className="w-8 h-8 text-cyan-400" aria-hidden="true" />
@@ -399,7 +404,9 @@ export default function PracticePortal() {
                 </div>
             )}
 
+            </div>
+
             <KeyboardHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
-        </main>
+        </DashboardLayout>
     );
 }

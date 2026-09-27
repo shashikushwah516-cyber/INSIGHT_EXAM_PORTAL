@@ -8,6 +8,7 @@ import {
     Award,
     CheckCircle2
 } from 'lucide-react';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 export default function AdminAttempts() {
     const [overview, setOverview] = useState(null);
@@ -33,16 +34,11 @@ export default function AdminAttempts() {
     const attempts = overview?.recentAttempts || [];
 
     return (
-        <main id="main-content" className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-neutral-800">
-                <Users className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
-                <div>
-                    <h1 className="text-3xl font-extrabold text-white">Candidate Assessment Monitoring</h1>
-                    <p className="text-neutral-300 text-sm mt-0.5">
-                        Log of submitted examinations, candidate results, and verification records.
-                    </p>
-                </div>
-            </div>
+        <DashboardLayout
+            pageTitle="Candidate Assessment Monitoring"
+            pageDescription="Log of submitted examinations, candidate results, and verification records."
+        >
+            <div className="space-y-6">
 
             {loading ? (
                 <div role="status" aria-live="polite" className="text-center py-16 text-neutral-400">
@@ -96,6 +92,7 @@ export default function AdminAttempts() {
                     </div>
                 </div>
             )}
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

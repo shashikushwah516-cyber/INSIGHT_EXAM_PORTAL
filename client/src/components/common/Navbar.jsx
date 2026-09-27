@@ -25,6 +25,7 @@ import {
     Sparkles
 } from 'lucide-react';
 import KeyboardHelpModal from './KeyboardHelpModal';
+import NavigationDrawer from '../layout/NavigationDrawer';
 
 export default function Navbar() {
     const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -597,77 +598,30 @@ export default function Navbar() {
                             )}
                         </div>
 
-                        {/* Mobile Menu Hamburger Button */}
-                        <div className="flex lg:hidden">
+                        {/* Three-Line Menu / Drawer Toggle Button */}
+                        <div className="flex">
                             <button
                                 type="button"
-                                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                                aria-label="Toggle navigation menu"
-                                className="p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ffe600]"
+                                onClick={() => setMobileMenuOpen(true)}
+                                aria-label="Open portal navigation menu"
+                                title="Open portal navigation drawer"
+                                className="p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-white hover:border-[#ffe600] focus-visible:ring-2 focus-visible:ring-[#ffe600] transition"
                             >
-                                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                <Menu className="w-5 h-5 sm:w-5 sm:h-5 text-neutral-200" aria-hidden="true" />
                             </button>
                         </div>
                     </div>
                 </div>
-
-                {/* Mobile Navigation Drawer */}
-                {mobileMenuOpen && (
-                    <nav className="lg:hidden py-4 border-t border-neutral-800 space-y-2 animate-in fade-in duration-150" aria-label="Mobile Navigation">
-                        <Link
-                            to="/login"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-bold transition ${
-                                isActive('/login') ? 'bg-neutral-800 text-[#ffe600] border border-[#ffe600]' : 'text-neutral-200 hover:bg-neutral-900 hover:text-[#ffe600]'
-                            }`}
-                        >
-                            <LogIn className="w-5 h-5 text-[#ffe600]" />
-                            <span>Login</span>
-                        </Link>
-                        <Link
-                            to="/register"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-bold transition ${
-                                isActive('/register') ? 'bg-neutral-800 text-[#ffe600] border border-[#ffe600]' : 'text-neutral-200 hover:bg-neutral-900 hover:text-cyan-400'
-                            }`}
-                        >
-                            <UserPlus className="w-5 h-5 text-cyan-400" />
-                            <span>Register</span>
-                        </Link>
-                        <Link
-                            to="/exams"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-bold transition ${
-                                isActive('/exams') ? 'bg-neutral-800 text-[#ffe600] border border-[#ffe600]' : 'text-neutral-200 hover:bg-neutral-900 hover:text-[#ffe600]'
-                            }`}
-                        >
-                            <PlayCircle className="w-5 h-5 text-emerald-400" />
-                            <span>Exam Window</span>
-                        </Link>
-                        <Link
-                            to="/dashboard"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-bold transition ${
-                                isActive('/dashboard') ? 'bg-neutral-800 text-[#ffe600] border border-[#ffe600]' : 'text-neutral-200 hover:bg-neutral-900 hover:text-purple-400'
-                            }`}
-                        >
-                            <LayoutDashboard className="w-5 h-5 text-purple-400" />
-                            <span>Student Dashboard</span>
-                        </Link>
-                        <Link
-                            to="/admin"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-base font-bold transition ${
-                                isActive('/admin') ? 'bg-neutral-800 text-[#ffe600] border border-[#ffe600]' : 'text-neutral-200 hover:bg-neutral-900 hover:text-[#ffe600]'
-                            }`}
-                        >
-                            <Shield className="w-5 h-5 text-[#ffe600]" />
-                            <span>Admin Dashboard</span>
-                        </Link>
-                    </nav>
-                )}
             </div>
 
+            {/* Structured Navigation Drawer (Grouped by Student, Exam, Practice, Support, Account) */}
+            <NavigationDrawer
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                onOpenHelp={() => setHelpOpen(true)}
+            />
+
+            {/* Keyboard Shortcuts & Help Modal */}
             <KeyboardHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
         </header>
     );

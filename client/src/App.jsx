@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import SkipLink from './components/common/SkipLink';
-import Navbar from './components/common/Navbar';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Pages
@@ -33,8 +32,6 @@ export default function App() {
                 <Router>
                     <div className="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
                         <SkipLink />
-                        <Navbar />
-
                         <div className="flex-1">
                             <Routes>
                                 {/* Public Routes */}

@@ -13,6 +13,7 @@ import {
     Award,
     CheckCircle2
 } from 'lucide-react';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 export default function AdminExams() {
     const [exams, setExams] = useState([]);
@@ -165,27 +166,29 @@ export default function AdminExams() {
     };
 
     return (
-        <main id="main-content" className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-neutral-800">
-                <div className="flex items-center gap-3">
-                    <BookOpen className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-white">Competitive Exam Management</h1>
-                        <p className="text-neutral-300 text-sm mt-0.5">
-                            Assemble question sets into official timed examinations for candidates.
-                        </p>
+        <DashboardLayout
+            pageTitle="Competitive Exam Management"
+            pageDescription="Assemble question sets into official timed examinations for candidates."
+        >
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-neutral-900 border border-neutral-800 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                        <BookOpen className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Examination Assembler</h2>
+                            <p className="text-neutral-400 text-xs">Configure timed tests, question sets, and negative marking.</p>
+                        </div>
                     </div>
-                </div>
 
-                <button
-                    type="button"
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffe600] text-black font-bold rounded-xl hover:bg-yellow-400 transition shrink-0"
-                >
-                    <Plus className="w-5 h-5" aria-hidden="true" />
-                    <span>Create Examination</span>
-                </button>
-            </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowCreateModal(true)}
+                        className="btn-primary"
+                    >
+                        <Plus className="w-5 h-5" aria-hidden="true" />
+                        <span>Create Examination</span>
+                    </button>
+                </div>
 
             {loading ? (
                 <div role="status" aria-live="polite" className="text-center py-16 text-neutral-400">
@@ -424,6 +427,7 @@ export default function AdminExams() {
                     </div>
                 </div>
             )}
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

@@ -13,6 +13,7 @@ import {
     Play,
     ArrowLeft
 } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function ExamInstructions() {
     const { id } = useParams();
@@ -71,9 +72,12 @@ export default function ExamInstructions() {
 
     if (loading) {
         return (
-            <main id="main-content" className="max-w-4xl mx-auto py-12 px-4 text-center text-neutral-400">
-                <p className="text-xl">Loading examination instructions...</p>
-            </main>
+            <DashboardLayout pageTitle="Loading Instructions...">
+                <div role="status" aria-live="polite" className="panel-card bg-neutral-900 border-neutral-800 text-center py-16 text-neutral-400">
+                    <div className="w-8 h-8 border-4 border-[#ffe600] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-white font-bold">Loading examination instructions and protocols...</p>
+                </div>
+            </DashboardLayout>
         );
     }
 
@@ -89,10 +93,14 @@ export default function ExamInstructions() {
     }
 
     return (
-        <main id="main-content" className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="mb-6">
-                <Link
-                    to="/exams"
+        <DashboardLayout
+            pageTitle="Examination Instructions & Protocol"
+            pageDescription="Review rules, keyboard shortcuts, and voice controls before starting your timed session."
+        >
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="mb-4">
+                    <Link
+                        to="/exams"
                     className="inline-flex items-center gap-2 text-neutral-300 hover:text-[#ffe600] text-sm font-semibold transition"
                 >
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" />
@@ -240,6 +248,7 @@ export default function ExamInstructions() {
                     </button>
                 </div>
             </div>
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

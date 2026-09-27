@@ -12,6 +12,7 @@ import {
     Save,
     RotateCcw
 } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function AccessibilitySettings() {
     const { preferences, updatePref, announce } = useAccessibility();
@@ -72,16 +73,11 @@ export default function AccessibilitySettings() {
     ];
 
     return (
-        <main id="main-content" className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-800">
-                <Sliders className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Accessibility & Display Preferences</h1>
-                    <p className="text-neutral-300 text-sm mt-1">
-                        Tailor visual contrast, typography scaling, text-to-speech, and voice controls to your needs.
-                    </p>
-                </div>
-            </div>
+        <DashboardLayout
+            pageTitle="Accessibility & Display Preferences"
+            pageDescription="Tailor visual contrast, typography scaling, text-to-speech, and voice controls to your individual needs."
+        >
+            <div className="max-w-4xl mx-auto space-y-6">
 
             {savedNotice && (
                 <div
@@ -309,6 +305,7 @@ export default function AccessibilitySettings() {
                     </button>
                 </div>
             </div>
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

@@ -19,25 +19,33 @@ import {
     Zap,
     FileCheck,
     Compass,
-    Sparkles
+    Sparkles,
+    Target,
+    Sliders,
+    ChevronRight,
+    TrendingUp
 } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function CandidateDashboard() {
     const { user } = useAuth();
     const { speak } = useSpeech();
-    const { announce } = useAccessibility();
+    const { announce, preferences } = useAccessibility();
     const navigate = useNavigate();
 
     const [exams, setExams] = useState([]);
     const [analytics, setAnalytics] = useState(null);
+    const [recentResults, setRecentResults] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('exams'); // 'exams' | 'practice' | 'results' | 'accessibility'
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [examsRes, analyticsRes] = await Promise.allSettled([
+                const [examsRes, analyticsRes, resultsRes] = await Promise.allSettled([
                     examService.getExams(),
-                    resultService.getCandidateAnalytics()
+                    resultService.getCandidateAnalytics(),
+                    resultService.getCandidateResults()
                 ]);
 
                 if (examsRes.status === 'fulfilled' && examsRes.value.success) {
@@ -45,6 +53,9 @@ export default function CandidateDashboard() {
                 }
                 if (analyticsRes.status === 'fulfilled' && analyticsRes.value.success) {
                     setAnalytics(analyticsRes.value.analytics);
+                }
+                if (resultsRes.status === 'fulfilled' && resultsRes.value.success) {
+                    setRecentResults(resultsRes.value.results || []);
                 }
             } catch (e) {
                 console.error('Error fetching dashboard data:', e);
@@ -60,257 +71,404 @@ export default function CandidateDashboard() {
         announce(greeting, 'polite');
     }, [user, speak, announce]);
 
-    const firstExam = exams[0] || null;
+    const subjects = [
+        { name: 'Quantitative Aptitude', code: 'QA', desc: 'Arithmetic, Percentages, and Numerical Reasoning', count: '100+ Questions' },
+        { name: 'Logical Reasoning', code: 'LR', desc: 'Deductive Logic, Patterns, and Verbal Reasoning', count: '80+ Questions' },
+        { name: 'English Comprehension', code: 'EN', desc: 'Grammar, Passages, and Vocabulary', count: '120+ Questions' },
+        { name: 'General Awareness', code: 'GA', desc: 'Current Affairs, Constitution, and Economy', count: '90+ Questions' }
+    ];
 
     return (
-        <main id="main-content" className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            {/* Header Greeting Banner with Glassmorphism */}
-            <div className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-950 border-2 border-neutral-800 p-6 sm:p-8 rounded-3xl mb-8 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-[#ffe600]/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-mono font-bold bg-[#ffe600] text-black px-3 py-1 rounded-full shadow-sm">
-                                STUDENT PORTAL
-                            </span>
-                            <span className="text-xs font-mono bg-neutral-800 text-[#ffe600] px-3 py-1 rounded-full border border-neutral-700">
-                                ROLL: {user?.rollNumber || 'CANDIDATE'}
-                            </span>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-                            Welcome back, <span className="text-[#ffe600]">{user?.name || 'Candidate'}</span>!
-                        </h1>
-                        <p className="text-neutral-300 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-                            Your accessible competitive examination and preparation hub. All interfaces support keyboard-first navigation and self-reading audio speech.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                speak(
-                                    `Student Dashboard Summary. You have ${exams.length} competitive examinations available. Your current accuracy rate is ${analytics?.accuracy || 0} percent. Press Tab to move to the Exam Window or Subject Practice.`
-                                )
-                            }
-                            className="inline-flex items-center gap-2 px-4 py-3 bg-neutral-800 text-[#ffe600] border-2 border-[#ffe600] rounded-xl hover:bg-neutral-700 font-bold text-sm transition-all shadow-md active:scale-95"
-                            aria-label="Listen to Audio Summary of Dashboard"
-                        >
-                            <Volume2 className="w-5 h-5" aria-hidden="true" />
-                            <span>Audio Summary</span>
-                        </button>
-
-                        <Link
-                            to="/exams"
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffe600] text-black font-extrabold rounded-xl hover:bg-yellow-400 text-sm transition-all shadow-lg shadow-yellow-500/10 active:scale-95"
-                        >
-                            <PlayCircle className="w-5 h-5" aria-hidden="true" />
-                            <span>Launch Exam Window</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-[#ffe600] p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Available Exams</span>
-                        <div className="w-8 h-8 rounded-lg bg-[#ffe600]/10 flex items-center justify-center text-[#ffe600]">
-                            <BookOpen className="w-4 h-4" aria-hidden="true" />
-                        </div>
-                    </div>
-                    <p className="text-3xl font-black text-white">{exams.length}</p>
-                    <span className="text-xs text-neutral-400 mt-1 block">Live competitive mocks</span>
-                </div>
-
-                <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-emerald-500 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Completed Exams</span>
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                        </div>
-                    </div>
-                    <p className="text-3xl font-black text-emerald-400">{analytics?.totalExamsAttempted || 0}</p>
-                    <span className="text-xs text-neutral-400 mt-1 block">Scored submissions</span>
-                </div>
-
-                <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-cyan-400 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Overall Accuracy</span>
-                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
-                            <Award className="w-4 h-4" aria-hidden="true" />
-                        </div>
-                    </div>
-                    <p className="text-3xl font-black text-cyan-400">
-                        {analytics?.accuracy !== undefined ? `${analytics.accuracy}%` : 'N/A'}
-                    </p>
-                    <span className="text-xs text-neutral-400 mt-1 block">Success rate</span>
-                </div>
-
-                <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-purple-400 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Average Speed</span>
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-                            <Clock className="w-4 h-4" aria-hidden="true" />
-                        </div>
-                    </div>
-                    <p className="text-3xl font-black text-purple-400">
-                        {analytics?.averageTimePerQuestion ? `${analytics.averageTimePerQuestion}s` : 'N/A'}
-                    </p>
-                    <span className="text-xs text-neutral-400 mt-1 block">Time per question</span>
-                </div>
-            </div>
-
-            {/* Featured Active Exam Window Card */}
-            {firstExam && (
-                <div className="bg-gradient-to-r from-neutral-900 to-neutral-950 border-2 border-[#ffe600]/80 rounded-3xl p-6 sm:p-8 mb-8 shadow-xl">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div className="space-y-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ffe600]/10 text-[#ffe600] text-xs font-bold border border-[#ffe600]/30">
-                                <Zap className="w-3.5 h-3.5" aria-hidden="true" />
-                                <span>Featured Competitive Examination</span>
+        <DashboardLayout
+            pageTitle="Candidate Dashboard"
+            pageDescription="Your central workspace for timed examinations, self-reading practice, and performance analytics."
+        >
+            <div className="space-y-8">
+                {/* 1. TOP WELCOME & STATS BANNER */}
+                <div className="panel-card bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-950 border-neutral-800 relative overflow-hidden">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[11px] font-mono font-bold bg-[#ffe600] text-black px-2.5 py-0.5 rounded-full">
+                                    CANDIDATE SESSION
+                                </span>
+                                <span className="text-[11px] font-mono bg-neutral-800 text-[#ffe600] px-2.5 py-0.5 rounded-full border border-neutral-700">
+                                    ROLL: {user?.rollNumber || 'CANDIDATE'}
+                                </span>
                             </div>
                             <h2 className="text-2xl sm:text-3xl font-black text-white">
-                                {firstExam.title}
+                                Welcome, <span className="text-[#ffe600]">{user?.name || 'Candidate'}</span>!
                             </h2>
-                            <p className="text-neutral-300 text-sm max-w-2xl leading-relaxed">
-                                {firstExam.description}
+                            <p className="text-neutral-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+                                Universal accessibility mode is active. All examinations support full keyboard navigation, self-reading voice TTS, and high-contrast color themes.
                             </p>
-                            <div className="flex flex-wrap gap-4 pt-2 text-xs text-neutral-300 font-mono">
-                                <span className="flex items-center gap-1.5 bg-neutral-950 px-3 py-1.5 rounded-lg border border-neutral-800">
-                                    <Clock className="w-4 h-4 text-[#ffe600]" aria-hidden="true" />
-                                    {firstExam.durationMinutes} Minutes
-                                </span>
-                                <span className="flex items-center gap-1.5 bg-neutral-950 px-3 py-1.5 rounded-lg border border-neutral-800">
-                                    <BookOpen className="w-4 h-4 text-cyan-400" aria-hidden="true" />
-                                    {firstExam.totalQuestions} Questions
-                                </span>
-                                <span className="flex items-center gap-1.5 bg-neutral-950 px-3 py-1.5 rounded-lg border border-neutral-800">
-                                    <Award className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-                                    {firstExam.totalMarks} Total Marks
-                                </span>
-                            </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-                            <Link
-                                to={`/exams/${firstExam.id || firstExam._id}/instructions`}
-                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#ffe600] text-black font-extrabold text-base rounded-2xl hover:bg-yellow-400 focus-visible:ring-4 focus-visible:ring-yellow-400 transition-all shadow-xl shadow-yellow-500/10 active:scale-95"
-                            >
-                                <span>Enter Exam Window</span>
-                                <ArrowRight className="w-5 h-5" aria-hidden="true" />
-                            </Link>
-
+                        {/* Quick Jump Buttons */}
+                        <div className="flex flex-wrap gap-2.5 shrink-0">
                             <Link
                                 to="/exams"
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-neutral-200 hover:text-white font-bold text-sm rounded-xl border border-neutral-700 hover:border-neutral-500 transition"
+                                className="btn-primary h-11 text-xs sm:text-sm"
                             >
-                                <span>View All Examinations</span>
+                                <PlayCircle className="w-4 h-4" aria-hidden="true" />
+                                <span>Exam Window</span>
+                            </Link>
+
+                            <Link
+                                to="/practice"
+                                className="btn-secondary h-11 text-xs sm:text-sm"
+                            >
+                                <Target className="w-4 h-4 text-cyan-400" aria-hidden="true" />
+                                <span>Practice Hub</span>
                             </Link>
                         </div>
                     </div>
                 </div>
-            )}
 
-            {/* Core Action Modules Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* 1. Exam Window Module */}
-                <div className="bg-neutral-900 border-2 border-neutral-800 hover:border-[#ffe600] rounded-3xl p-6 transition-all duration-200 flex flex-col justify-between shadow-lg">
-                    <div>
-                        <div className="w-12 h-12 rounded-2xl bg-[#ffe600]/10 flex items-center justify-center text-[#ffe600] mb-4 border border-[#ffe600]/20">
-                            <PlayCircle className="w-7 h-7" aria-hidden="true" />
+                {/* 2. KPI METRICS CARDS */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="panel-card bg-neutral-900/80 border-neutral-800 p-5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Available Exams</span>
+                            <PlayCircle className="w-4 h-4 text-[#ffe600]" aria-hidden="true" />
                         </div>
-                        <h2 className="text-xl font-bold text-white mb-2">Timed Examination Window</h2>
-                        <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                            Take timed mock competitive examinations with real-time audio reading, keyboard shortcuts, autosaved answers, and server-side scoring.
-                        </p>
+                        <p className="text-2xl sm:text-3xl font-black text-white">{exams.length}</p>
+                        <span className="text-[11px] text-emerald-400 font-semibold mt-1 block">Live & Timed</span>
                     </div>
-                    <Link
-                        to="/exams"
-                        className="inline-flex items-center justify-between w-full px-5 py-3.5 bg-neutral-800 hover:bg-[#ffe600] text-white hover:text-black font-bold text-sm rounded-xl border border-neutral-700 hover:border-[#ffe600] transition"
-                    >
-                        <span>Open Exam Window</span>
-                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                    </Link>
-                </div>
 
-                {/* 2. Practice Portal Module */}
-                <div className="bg-neutral-900 border-2 border-neutral-800 hover:border-cyan-400 rounded-3xl p-6 transition-all duration-200 flex flex-col justify-between shadow-lg">
-                    <div>
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-4 border border-cyan-500/20">
-                            <Compass className="w-7 h-7" aria-hidden="true" />
+                    <div className="panel-card bg-neutral-900/80 border-neutral-800 p-5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Questions Practiced</span>
+                            <Target className="w-4 h-4 text-cyan-400" aria-hidden="true" />
                         </div>
-                        <h2 className="text-xl font-bold text-white mb-2">Subject-Wise Practice</h2>
-                        <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                            Practice questions across Quantitative Aptitude, Reasoning, English, and General Awareness with instant audio feedback and solutions.
-                        </p>
+                        <p className="text-2xl sm:text-3xl font-black text-white">{analytics?.totalPracticed || 0}</p>
+                        <span className="text-[11px] text-cyan-400 font-semibold mt-1 block">With Audio Solutions</span>
                     </div>
-                    <Link
-                        to="/practice"
-                        className="inline-flex items-center justify-between w-full px-5 py-3.5 bg-neutral-800 hover:bg-cyan-400 text-white hover:text-black font-bold text-sm rounded-xl border border-neutral-700 hover:border-cyan-400 transition"
-                    >
-                        <span>Practice Questions</span>
-                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                    </Link>
-                </div>
 
-                {/* 3. Results & Solutions Module */}
-                <div className="bg-neutral-900 border-2 border-neutral-800 hover:border-emerald-500 rounded-3xl p-6 transition-all duration-200 flex flex-col justify-between shadow-lg">
-                    <div>
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4 border border-emerald-500/20">
-                            <Award className="w-7 h-7" aria-hidden="true" />
+                    <div className="panel-card bg-neutral-900/80 border-neutral-800 p-5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Overall Accuracy</span>
+                            <TrendingUp className="w-4 h-4 text-purple-400" aria-hidden="true" />
                         </div>
-                        <h2 className="text-xl font-bold text-white mb-2">Results & Detailed Solutions</h2>
-                        <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                            Review your past examination scores, analyze incorrect answers, and hear spoken step-by-step explanations.
-                        </p>
+                        <p className="text-2xl sm:text-3xl font-black text-white">{analytics?.accuracy || 0}%</p>
+                        <span className="text-[11px] text-purple-400 font-semibold mt-1 block">Performance Score</span>
                     </div>
-                    <Link
-                        to="/results"
-                        className="inline-flex items-center justify-between w-full px-5 py-3.5 bg-neutral-800 hover:bg-emerald-500 text-white hover:text-black font-bold text-sm rounded-xl border border-neutral-700 hover:border-emerald-500 transition"
-                    >
-                        <span>View Past Results</span>
-                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                    </Link>
-                </div>
-            </div>
 
-            {/* Preparation Recommendations Section */}
-            <div className="bg-neutral-900/90 border-2 border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-3">
-                        <Sparkles className="w-6 h-6 text-[#ffe600]" aria-hidden="true" />
-                        <h2 className="text-xl font-bold text-white">Smart Preparation Recommendations</h2>
+                    <div className="panel-card bg-neutral-900/80 border-neutral-800 p-5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Exams Submitted</span>
+                            <Award className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-black text-white">{recentResults.length}</p>
+                        <span className="text-[11px] text-emerald-400 font-semibold mt-1 block">Verified Scores</span>
                     </div>
-                    <Link
-                        to="/analytics"
-                        className="text-sm font-bold text-[#ffe600] hover:underline inline-flex items-center gap-1.5"
-                    >
-                        <span>View Full Performance Analytics</span>
-                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                    </Link>
                 </div>
 
-                {analytics && analytics.recommendations && analytics.recommendations.length > 0 ? (
-                    <div className="space-y-3 mt-4">
-                        {analytics.recommendations.map((rec, idx) => (
-                            <div
-                                key={idx}
-                                className="flex items-start gap-3 p-4 bg-neutral-950 rounded-2xl border border-neutral-800 text-sm text-neutral-200"
-                            >
-                                <CheckCircle2 className="w-5 h-5 text-[#ffe600] shrink-0 mt-0.5" aria-hidden="true" />
-                                <span className="leading-relaxed">{rec}</span>
+                {/* 3. STRUCTURED TABS NAVIGATION */}
+                <div>
+                    <div className="border-b border-neutral-800 flex gap-2 sm:gap-4 overflow-x-auto pb-px" role="tablist">
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === 'exams'}
+                            onClick={() => {
+                                setActiveTab('exams');
+                                speak(`Showing ${exams.length} available competitive examinations.`);
+                            }}
+                            className={`
+                                h-11 px-4 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap
+                                ${activeTab === 'exams'
+                                    ? 'border-[#ffe600] text-[#ffe600]'
+                                    : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
+                                }
+                            `}
+                        >
+                            <PlayCircle className="w-4 h-4" />
+                            <span>Available Examinations ({exams.length})</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === 'practice'}
+                            onClick={() => {
+                                setActiveTab('practice');
+                                speak('Showing subject practice preparation modules.');
+                            }}
+                            className={`
+                                h-11 px-4 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap
+                                ${activeTab === 'practice'
+                                    ? 'border-[#ffe600] text-[#ffe600]'
+                                    : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
+                                }
+                            `}
+                        >
+                            <Target className="w-4 h-4" />
+                            <span>Subject Practice Modules</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === 'results'}
+                            onClick={() => {
+                                setActiveTab('results');
+                                speak(`Showing your ${recentResults.length} recent exam scorecards.`);
+                            }}
+                            className={`
+                                h-11 px-4 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap
+                                ${activeTab === 'results'
+                                    ? 'border-[#ffe600] text-[#ffe600]'
+                                    : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
+                                }
+                            `}
+                        >
+                            <Award className="w-4 h-4" />
+                            <span>Recent Results & Scorecards ({recentResults.length})</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === 'accessibility'}
+                            onClick={() => {
+                                setActiveTab('accessibility');
+                                speak('Showing accessibility and audio speech controls.');
+                            }}
+                            className={`
+                                h-11 px-4 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap
+                                ${activeTab === 'accessibility'
+                                    ? 'border-[#ffe600] text-[#ffe600]'
+                                    : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
+                                }
+                            `}
+                        >
+                            <Sliders className="w-4 h-4" />
+                            <span>Accessibility & Speech Tools</span>
+                        </button>
+                    </div>
+
+                    {/* TAB CONTENT PANELS */}
+                    <div className="pt-6">
+                        {/* TAB 1: AVAILABLE EXAMS */}
+                        {activeTab === 'exams' && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-bold text-white">Live Competitive Examinations</h3>
+                                    <span className="text-xs text-neutral-400">All tests feature server auto-save</span>
+                                </div>
+
+                                {exams.length === 0 ? (
+                                    <div className="panel-card bg-neutral-900 border-neutral-800 text-center py-12">
+                                        <Clock className="w-8 h-8 text-neutral-500 mx-auto mb-2" />
+                                        <p className="text-white font-bold">No active examinations currently scheduled.</p>
+                                        <p className="text-xs text-neutral-400 mt-1">Check back later or prepare with Practice Modules.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {exams.map((exam) => (
+                                            <div
+                                                key={exam._id}
+                                                className="panel-card panel-card-hover bg-neutral-900 border-neutral-800 flex flex-col justify-between"
+                                            >
+                                                <div>
+                                                    <div className="flex items-start justify-between gap-2 mb-3">
+                                                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-neutral-800 text-[#ffe600] border border-neutral-700 font-bold">
+                                                            {exam.subject || 'All Subjects'}
+                                                        </span>
+                                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold">
+                                                            {exam.durationMinutes} Minutes
+                                                        </span>
+                                                    </div>
+
+                                                    <h4 className="text-lg font-bold text-white mb-2 leading-tight">
+                                                        {exam.title}
+                                                    </h4>
+
+                                                    <p className="text-xs text-neutral-300 line-clamp-2 mb-4 leading-relaxed">
+                                                        {exam.description || 'Full competitive examination with timed sections and audio question explanations.'}
+                                                    </p>
+
+                                                    <div className="flex items-center gap-4 text-xs text-neutral-400 mb-4 pb-4 border-b border-neutral-800">
+                                                        <span>Questions: <strong className="text-white">{exam.totalQuestions}</strong></span>
+                                                        <span>Marks: <strong className="text-white">{exam.totalMarks}</strong></span>
+                                                        <span>Negative: <strong className="text-white">{exam.negativeMarking ? 'Yes (-0.25)' : 'No'}</strong></span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2">
+                                                    <Link
+                                                        to={`/exams/${exam._id}/instructions`}
+                                                        className="btn-primary flex-1 h-10 text-xs"
+                                                    >
+                                                        <PlayCircle className="w-4 h-4" aria-hidden="true" />
+                                                        <span>Start Timed Exam</span>
+                                                    </Link>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            speak(
+                                                                `${exam.title}. Duration ${exam.durationMinutes} minutes. Total questions: ${exam.totalQuestions}. Negative marking: ${exam.negativeMarking ? 'Yes' : 'No'}.`
+                                                            )
+                                                        }
+                                                        className="h-10 px-3 rounded-xl bg-neutral-800 text-neutral-300 hover:text-[#ffe600] border border-neutral-700 transition"
+                                                        aria-label={`Listen to details for ${exam.title}`}
+                                                    >
+                                                        <Volume2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        ))}
+                        )}
+
+                        {/* TAB 2: SUBJECT PRACTICE */}
+                        {activeTab === 'practice' && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-bold text-white">Subject Preparation Modules</h3>
+                                    <Link to="/practice" className="text-xs text-[#ffe600] hover:underline font-bold">
+                                        Open Full Practice Arena →
+                                    </Link>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {subjects.map((sub, idx) => (
+                                        <div key={idx} className="panel-card bg-neutral-900 border-neutral-800 flex flex-col justify-between">
+                                            <div>
+                                                <span className="text-[10px] font-mono text-cyan-400 font-bold block mb-1">
+                                                    {sub.code} • {sub.count}
+                                                </span>
+                                                <h4 className="text-base font-bold text-white mb-1">{sub.name}</h4>
+                                                <p className="text-xs text-neutral-400 mb-4">{sub.desc}</p>
+                                            </div>
+                                            <Link
+                                                to="/practice"
+                                                className="btn-secondary w-full h-9 text-xs"
+                                            >
+                                                <span>Practice Now</span>
+                                                <ArrowRight className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 3: RECENT RESULTS */}
+                        {activeTab === 'results' && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-bold text-white">Recent Exam Attempts & Scores</h3>
+                                    <Link to="/results" className="text-xs text-[#ffe600] hover:underline font-bold">
+                                        View Complete History →
+                                    </Link>
+                                </div>
+
+                                {recentResults.length === 0 ? (
+                                    <div className="panel-card bg-neutral-900 border-neutral-800 text-center py-10">
+                                        <Award className="w-8 h-8 text-neutral-500 mx-auto mb-2" />
+                                        <p className="text-white font-bold">No exam attempts recorded yet.</p>
+                                        <p className="text-xs text-neutral-400 mt-1">Take an examination from the Available Exams tab.</p>
+                                    </div>
+                                ) : (
+                                    <div className="panel-card bg-neutral-900 border-neutral-800 p-0 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-xs sm:text-sm">
+                                                <thead className="bg-neutral-950 text-neutral-400 uppercase text-[10px] tracking-wider border-b border-neutral-800">
+                                                    <tr>
+                                                        <th className="p-3.5">Examination</th>
+                                                        <th className="p-3.5">Score</th>
+                                                        <th className="p-3.5">Accuracy</th>
+                                                        <th className="p-3.5">Date</th>
+                                                        <th className="p-3.5 text-right">Review</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-neutral-800 text-white font-medium">
+                                                    {recentResults.slice(0, 5).map((res) => (
+                                                        <tr key={res._id} className="hover:bg-neutral-850/60 transition">
+                                                            <td className="p-3.5 font-bold">
+                                                                {res.exam?.title || 'Competitive Examination'}
+                                                            </td>
+                                                            <td className="p-3.5 text-[#ffe600] font-mono font-bold">
+                                                                {res.score} / {res.exam?.totalMarks || 100}
+                                                            </td>
+                                                            <td className="p-3.5 font-mono">
+                                                                {res.accuracy ? `${res.accuracy}%` : 'N/A'}
+                                                            </td>
+                                                            <td className="p-3.5 text-neutral-400 font-mono text-xs">
+                                                                {new Date(res.createdAt).toLocaleDateString()}
+                                                            </td>
+                                                            <td className="p-3.5 text-right">
+                                                                <Link
+                                                                    to={`/results/${res._id}`}
+                                                                    className="text-xs text-cyan-400 hover:underline font-bold"
+                                                                >
+                                                                    Solutions & Audio →
+                                                                </Link>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* TAB 4: ACCESSIBILITY & AUDIO TOOLS */}
+                        {activeTab === 'accessibility' && (
+                            <div className="space-y-4">
+                                <div className="panel-card bg-neutral-900 border-neutral-800">
+                                    <h3 className="text-base font-bold text-white mb-2">Accessibility Quick Configuration</h3>
+                                    <p className="text-xs text-neutral-300 mb-6">
+                                        Customize your visual contrast, audio speech synthesizer rate, and keyboard settings.
+                                    </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+                                            <span className="text-xs font-bold text-[#ffe600] uppercase tracking-wider block mb-2">
+                                                Self-Reading Audio Test
+                                            </span>
+                                            <p className="text-xs text-neutral-300 mb-4">
+                                                Test the speech synthesizer with your current voice rate ({preferences.speechRate}x) and language ({preferences.language}).
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => speak('This is a test of the self-reading audio speech engine in Insight Exam Portal.')}
+                                                className="btn-outline h-10 text-xs w-full"
+                                            >
+                                                <Volume2 className="w-4 h-4" />
+                                                <span>Play Test Audio Sample</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+                                            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block mb-2">
+                                                Complete Preferences Manager
+                                            </span>
+                                            <p className="text-xs text-neutral-300 mb-4">
+                                                Adjust font size scaling, speech pitch, high-contrast themes, and voice command parameters.
+                                            </p>
+                                            <Link
+                                                to="/accessibility"
+                                                className="btn-secondary h-10 text-xs w-full"
+                                            >
+                                                <Sliders className="w-4 h-4" />
+                                                <span>Open Accessibility Studio</span>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <p className="text-neutral-400 text-sm">
-                        Complete your first examination or practice session to unlock personalized preparation tips.
-                    </p>
-                )}
+                </div>
             </div>
-        </main>
+        </DashboardLayout>
     );
 }

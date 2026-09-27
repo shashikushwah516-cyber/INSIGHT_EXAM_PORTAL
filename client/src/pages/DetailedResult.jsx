@@ -15,6 +15,7 @@ import {
     HelpCircle,
     BookOpen
 } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function DetailedResult() {
     const { id } = useParams();
@@ -47,20 +48,25 @@ export default function DetailedResult() {
 
     if (loading) {
         return (
-            <main id="main-content" className="max-w-5xl mx-auto py-12 px-4 text-center text-neutral-400">
-                <p className="text-xl">Loading examination result...</p>
-            </main>
+            <DashboardLayout pageTitle="Loading Scorecard...">
+                <div role="status" aria-live="polite" className="panel-card bg-neutral-900 border-neutral-800 text-center py-16 text-neutral-400">
+                    <div className="w-8 h-8 border-4 border-[#ffe600] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-white font-bold">Loading examination results and solutions...</p>
+                </div>
+            </DashboardLayout>
         );
     }
 
     if (!result) {
         return (
-            <main id="main-content" className="max-w-5xl mx-auto py-12 px-4 text-center">
-                <h1 className="text-2xl font-bold text-white mb-4">Result Not Found</h1>
-                <Link to="/results" className="text-[#ffe600] underline font-bold">
-                    Back to Results History
-                </Link>
-            </main>
+            <DashboardLayout pageTitle="Result Not Found">
+                <div className="panel-card bg-neutral-900 border-neutral-800 text-center py-16">
+                    <h1 className="text-2xl font-bold text-white mb-4">Result Not Found</h1>
+                    <Link to="/results" className="btn-primary">
+                        Back to Results History
+                    </Link>
+                </div>
+            </DashboardLayout>
         );
     }
 
@@ -78,8 +84,11 @@ export default function DetailedResult() {
     };
 
     return (
-        <main id="main-content" className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="mb-6">
+        <DashboardLayout
+            pageTitle="Scorecard & Question Review"
+            pageDescription="Detailed review of all questions with correct options, candidate answers, and audible explanations."
+        >
+            <div className="mb-4">
                 <Link
                     to="/results"
                     className="inline-flex items-center gap-2 text-neutral-300 hover:text-[#ffe600] text-sm font-semibold transition"
@@ -316,6 +325,6 @@ export default function DetailedResult() {
                     );
                 })}
             </section>
-        </main>
+        </DashboardLayout>
     );
 }

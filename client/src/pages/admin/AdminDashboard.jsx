@@ -17,6 +17,7 @@ import {
     Clock,
     Award
 } from 'lucide-react';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 export default function AdminDashboard() {
     const [overview, setOverview] = useState(null);
@@ -41,7 +42,11 @@ export default function AdminDashboard() {
     }, []);
 
     return (
-        <main id="main-content" className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <DashboardLayout
+            pageTitle="Administrator Control Center"
+            pageDescription="Overview of platform assessments, candidate results, question banks, and system metrics."
+        >
+            <div className="space-y-8">
             {/* Header Greeting Banner */}
             <div className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-950 border-2 border-neutral-800 p-6 sm:p-8 rounded-3xl mb-8 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -280,6 +285,7 @@ export default function AdminDashboard() {
                     </section>
                 </>
             )}
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

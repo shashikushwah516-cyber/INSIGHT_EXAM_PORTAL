@@ -13,6 +13,7 @@ import {
     ArrowRight,
     TrendingUp
 } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function CandidateAnalytics() {
     const [analytics, setAnalytics] = useState(null);
@@ -42,16 +43,19 @@ export default function CandidateAnalytics() {
 
     if (loading) {
         return (
-            <main id="main-content" className="max-w-6xl mx-auto py-12 px-4 text-center text-neutral-400">
-                <p className="text-xl">Calculating preparation analytics...</p>
-            </main>
+            <DashboardLayout pageTitle="Calculating Analytics...">
+                <div role="status" aria-live="polite" className="panel-card bg-neutral-900 border-neutral-800 text-center py-16 text-neutral-400">
+                    <div className="w-8 h-8 border-4 border-[#ffe600] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-white font-bold">Calculating preparation analytics and accuracy metrics...</p>
+                </div>
+            </DashboardLayout>
         );
     }
 
     if (!analytics || analytics.totalExamsAttempted === 0) {
         return (
-            <main id="main-content" className="max-w-5xl mx-auto py-12 px-4 text-center">
-                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 max-w-lg mx-auto">
+            <DashboardLayout pageTitle="Performance Analytics" pageDescription="Detailed accuracy tracking, subject mastery, and examination progress over time.">
+                <div className="panel-card bg-neutral-900 border-neutral-800 text-center py-12 max-w-lg mx-auto">
                     <BarChart3 className="w-12 h-12 text-[#ffe600] mx-auto mb-3" aria-hidden="true" />
                     <h1 className="text-2xl font-bold text-white mb-2">No Examination Data Yet</h1>
                     <p className="text-neutral-400 text-sm mb-6">
@@ -59,41 +63,42 @@ export default function CandidateAnalytics() {
                     </p>
                     <Link
                         to="/exams"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#ffe600] text-black font-bold rounded-xl"
+                        className="btn-primary"
                     >
                         <span>Start an Examination</span>
                         <ArrowRight className="w-4 h-4" aria-hidden="true" />
                     </Link>
                 </div>
-            </main>
+            </DashboardLayout>
         );
     }
 
     return (
-        <main id="main-content" className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-neutral-800">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-white">Performance Analytics & Insights</h1>
-                    <p className="text-neutral-300 text-sm mt-1">
-                        Detailed breakdown of your competitive exam preparation, accuracy, and weak areas.
-                    </p>
+        <DashboardLayout
+            pageTitle="Performance Analytics & Insights"
+            pageDescription="Detailed breakdown of your competitive exam preparation, accuracy, and weak areas."
+        >
+            <div className="space-y-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+                    <div>
+                        <h2 className="text-xl font-bold text-white">Performance Overview</h2>
+                        <p className="text-neutral-400 text-sm">Real-time statistics across all attempted competitive papers</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const recs = analytics.recommendations.join('. ');
+                            speak(
+                                `Analytics Summary: Accuracy is ${analytics.accuracy} percent. Average time per question is ${analytics.averageTimePerQuestion} seconds. Recommendations: ${recs}`
+                            );
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-950 text-[#ffe600] border border-[#ffe600] rounded-xl hover:bg-neutral-800 font-bold transition shrink-0"
+                        aria-label="Read complete analytics summary aloud"
+                    >
+                        <Volume2 className="w-5 h-5" aria-hidden="true" />
+                        <span>Read Summary Aloud</span>
+                    </button>
                 </div>
-
-                <button
-                    type="button"
-                    onClick={() => {
-                        const recs = analytics.recommendations.join('. ');
-                        speak(
-                            `Analytics Summary: Accuracy is ${analytics.accuracy} percent. Average time per question is ${analytics.averageTimePerQuestion} seconds. Recommendations: ${recs}`
-                        );
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-900 text-[#ffe600] border border-[#ffe600] rounded-xl hover:bg-neutral-800 font-bold transition shrink-0"
-                    aria-label="Read complete analytics summary aloud"
-                >
-                    <Volume2 className="w-5 h-5" aria-hidden="true" />
-                    <span>Read Summary Aloud</span>
-                </button>
-            </div>
 
             {/* Top Metric Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -201,6 +206,7 @@ export default function CandidateAnalytics() {
                     ))}
                 </div>
             </section>
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }

@@ -11,6 +11,7 @@ import {
     AlertCircle,
     CheckCircle2
 } from 'lucide-react';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 export default function AdminQuestions() {
     const [questions, setQuestions] = useState([]);
@@ -133,27 +134,31 @@ export default function AdminQuestions() {
     };
 
     return (
-        <main id="main-content" className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-neutral-800">
-                <div className="flex items-center gap-3">
-                    <HelpCircle className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-white">Question Bank Management</h1>
-                        <p className="text-neutral-300 text-sm mt-0.5">
-                            Repository of questions with multi-subject categorization and accessibility audio cues.
-                        </p>
+        <DashboardLayout
+            pageTitle="Question Bank Management"
+            pageDescription="Repository of questions with multi-subject categorization, explanations, and accessibility audio cues."
+        >
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                        <HelpCircle className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-white">Question Bank Management</h1>
+                            <p className="text-neutral-300 text-sm mt-0.5">
+                                Repository of questions with multi-subject categorization and accessibility audio cues.
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                <button
-                    type="button"
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffe600] text-black font-bold rounded-xl hover:bg-yellow-400 transition shrink-0"
-                >
-                    <Plus className="w-5 h-5" aria-hidden="true" />
-                    <span>Create New Question</span>
-                </button>
-            </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowCreateModal(true)}
+                        className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffe600] text-black font-bold rounded-xl hover:bg-yellow-400 transition shrink-0"
+                    >
+                        <Plus className="w-5 h-5" aria-hidden="true" />
+                        <span>Create New Question</span>
+                    </button>
+                </div>
 
             {/* Filter and Search Bar */}
             <div className="bg-neutral-900 border-2 border-neutral-800 p-4 rounded-xl mb-6 flex flex-col sm:flex-row gap-4">
@@ -452,6 +457,7 @@ export default function AdminQuestions() {
                     </div>
                 </div>
             )}
-        </main>
+            </div>
+        </DashboardLayout>
     );
 }
