@@ -49,6 +49,16 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        if (email && email.trim()) {
+            const existingEmail = await User.findOne({ email: email.trim().toLowerCase() });
+            if (existingEmail) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'A user with this email address already exists.'
+                });
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const assignedRole = role === 'admin' ? 'admin' : 'candidate';
 

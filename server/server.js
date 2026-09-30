@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/database');
@@ -34,13 +35,31 @@ app.use(cors({
 
 // Dedicated Health Check Endpoint for Render Zero-Downtime Deploys & Monitors
 app.get(['/health', '/api/health'], (req, res) => {
+    const isDbConnected = mongoose.connection.readyState === 1;
     res.status(200).json({
-        status: 'healthy',
+        status: isDbConnected ? 'healthy' : 'degraded',
         service: 'Insight Exam Platform API',
         version: '2.0.0',
         uptime: Math.floor(process.uptime()),
+        database: isDbConnected ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString()
     });
+});
+
+// Guardrail: return immediate descriptive error if database is not connected
+app.use((req, res, next) => {
+    if (req.path === '/health' || req.path === '/api/health' || req.path === '/') {
+        return next();
+    }
+    const isApiRoute = req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/admin') || req.path.startsWith('/exam');
+    if (isApiRoute && mongoose.connection.readyState !== 1) {
+        return res.status(503).json({
+            success: false,
+            message: 'Database is not connected. If running on Render, please set the MONGO_URI environment variable in your Render dashboard.',
+            code: 'DATABASE_DISCONNECTED'
+        });
+    }
+    next();
 });
 
 // Mounted API Routes

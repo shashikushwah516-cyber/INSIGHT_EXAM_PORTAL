@@ -7,7 +7,7 @@ const getDefaultBaseUrl = () => {
     if (typeof window !== 'undefined') {
         return '/api';
     }
-    return 'https://insight-exam-portal.onrender.com';
+    return 'https://insight-exam-portal.onrender.com/api';
 };
 
 const API_BASE_URL = getDefaultBaseUrl();
