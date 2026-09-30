@@ -71,7 +71,7 @@ const clientDistPath = path.resolve(__dirname, '../client/dist');
 const hasClientBuild = fs.existsSync(clientDistPath);
 
 if (hasClientBuild) {
-    app.use(express.static(clientDistPath));
+    app.use(express.static(clientDistPath, { index: false }));
 }
 
 // Root endpoint: Serves SPA index.html to browsers, JSON API info to API callers/tests
