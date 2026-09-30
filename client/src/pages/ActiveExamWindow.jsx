@@ -288,6 +288,7 @@ export default function ActiveExamWindow() {
                 };
                 visualCacheRef.current.set(cacheKey, visualData);
             } else {
+                try {
                     const token = localStorage.getItem('insight_token');
                     const apiBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
                         ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
