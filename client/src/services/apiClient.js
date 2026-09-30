@@ -7,7 +7,7 @@ const getDefaultBaseUrl = () => {
     if (typeof window !== 'undefined') {
         return '/api';
     }
-    return 'https://insight-exam-portal.onrender.com/api';
+    return 'https://hackathon-project-1-bumv.onrender.com';
 };
 
 const API_BASE_URL = getDefaultBaseUrl();
