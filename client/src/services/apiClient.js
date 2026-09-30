@@ -7,7 +7,7 @@ const getDefaultBaseUrl = () => {
     if (typeof window !== 'undefined') {
         return '/api';
     }
-    return 'http://localhost:5001/api';
+    return 'https://insight-exam-portal.onrender.com';
 };
 
 const API_BASE_URL = getDefaultBaseUrl();
