@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSpeech } from '../../hooks/useSpeech';
+import { useAccessibility } from '../../context/AccessibilityContext';
 import examService from '../../services/examService';
 import questionService from '../../services/questionService';
 import {
@@ -11,7 +12,8 @@ import {
     Check,
     Clock,
     Award,
-    CheckCircle2
+    CheckCircle2,
+    AlertCircle
 } from 'lucide-react';
 import AdminLayout from '../../components/layout/AdminLayout';
 
@@ -24,6 +26,7 @@ export default function AdminExams() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState('');
     const [formSuccess, setFormSuccess] = useState('');
+    const [actionMsg, setActionMsg] = useState('');
 
     const [newExam, setNewExam] = useState({
         title: '',
@@ -39,6 +42,7 @@ export default function AdminExams() {
     });
 
     const { speak } = useSpeech();
+    const { announce } = useAccessibility();
 
     const fetchExams = async () => {
         setLoading(true);
@@ -55,18 +59,31 @@ export default function AdminExams() {
     };
 
     useEffect(() => {
-        fetchExams();
-        const loadBankQuestions = async () => {
+        let isMounted = true;
+        const loadInitialData = async () => {
+            setLoading(true);
             try {
-                const res = await questionService.getQuestions();
-                if (res.success) {
-                    setAvailableQuestions(res.questions || []);
+                const [examRes, qRes] = await Promise.allSettled([
+                    examService.getExams(),
+                    questionService.getQuestions()
+                ]);
+                if (isMounted) {
+                    if (examRes.status === 'fulfilled' && examRes.value?.success) {
+                        setExams(examRes.value.exams || []);
+                    }
+                    if (qRes.status === 'fulfilled' && qRes.value?.success) {
+                        setAvailableQuestions(qRes.value.questions || []);
+                    }
                 }
             } catch (err) {
-                console.warn('Could not load bank questions:', err);
+                console.warn('Initial load failed:', err);
+            } finally {
+                if (isMounted) setLoading(false);
             }
         };
-        loadBankQuestions();
+
+        loadInitialData();
+        return () => { isMounted = false; };
     }, []);
 
     const handleToggleQuestionSelect = (qId) => {
@@ -89,18 +106,21 @@ export default function AdminExams() {
         setFormSuccess('');
 
         if (!newExam.title.trim() || !newExam.description.trim()) {
-            setFormError('Exam title and description are required.');
+            const msg = 'Exam title and description are required.';
+            setFormError(msg);
+            speak(msg);
             return;
         }
 
         if (newExam.selectedQuestionIds.length === 0) {
-            setFormError('Please select at least one question from the Question Bank.');
+            const msg = 'Please select at least one question from the Question Bank.';
+            setFormError(msg);
+            speak(msg);
             return;
         }
 
         setIsSubmitting(true);
         try {
-            // Find full question objects
             const selectedQs = availableQuestions
                 .filter((q) => newExam.selectedQuestionIds.includes(q._id))
                 .map((q) => ({
@@ -129,13 +149,17 @@ export default function AdminExams() {
 
             const res = await examService.createExam(payload);
             if (res.success) {
-                setFormSuccess('Examination created and published successfully.');
-                speak('Examination created and available to candidates.');
+                const okMsg = 'Examination created and published successfully.';
+                setFormSuccess(okMsg);
+                speak(okMsg);
+                announce(okMsg, 'polite');
                 fetchExams();
                 setTimeout(() => setShowCreateModal(false), 1200);
             }
         } catch (err) {
-            setFormError(err.message || 'Error creating exam.');
+            const errMsg = err.message || 'Error creating exam.';
+            setFormError(errMsg);
+            speak(errMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -148,9 +172,15 @@ export default function AdminExams() {
             setExams((prev) =>
                 prev.map((e) => ((e.id || e._id) === (exam.id || exam._id) ? { ...e, isPublished: updatedStatus } : e))
             );
-            speak(`Exam ${updatedStatus ? 'published' : 'unpublished'}.`);
+            const msg = `Exam "${exam.title}" ${updatedStatus ? 'published' : 'unpublished'}.`;
+            setActionMsg(msg);
+            speak(msg);
+            announce(msg, 'polite');
+            setTimeout(() => setActionMsg(''), 4000);
         } catch (err) {
-            alert('Could not update exam publication status.');
+            const errText = 'Could not update exam publication status.';
+            setActionMsg(errText);
+            speak(errText);
         }
     };
 
@@ -159,9 +189,15 @@ export default function AdminExams() {
         try {
             await examService.deleteExam(id);
             setExams((prev) => prev.filter((e) => (e.id || e._id) !== id));
-            speak('Examination deleted.');
+            const msg = 'Examination deleted successfully.';
+            setActionMsg(msg);
+            speak(msg);
+            announce(msg, 'polite');
+            setTimeout(() => setActionMsg(''), 4000);
         } catch (err) {
-            alert('Failed to delete examination.');
+            const errText = 'Failed to delete examination.';
+            setActionMsg(errText);
+            speak(errText);
         }
     };
 
@@ -171,262 +207,277 @@ export default function AdminExams() {
             pageDescription="Assemble question sets into official timed examinations for candidates."
         >
             <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-neutral-900 border border-neutral-800 rounded-2xl">
+                {/* Header Action Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-sm">
                     <div className="flex items-center gap-3">
-                        <BookOpen className="w-8 h-8 text-[#ffe600]" aria-hidden="true" />
+                        <div className="w-10 h-10 rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] flex items-center justify-center shrink-0 border border-[var(--border-color)]">
+                            <BookOpen className="w-6 h-6" aria-hidden="true" />
+                        </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Examination Assembler</h2>
-                            <p className="text-neutral-400 text-xs">Configure timed tests, question sets, and negative marking.</p>
+                            <h2 className="text-xl font-bold text-[var(--text-primary)]">Examination Assembler</h2>
+                            <p className="text-[var(--text-secondary)] text-xs">Configure timed tests, question sets, and negative marking.</p>
                         </div>
                     </div>
 
                     <button
                         type="button"
-                        onClick={() => setShowCreateModal(true)}
-                        className="btn-primary"
+                        onClick={() => {
+                            setFormError('');
+                            setFormSuccess('');
+                            setShowCreateModal(true);
+                        }}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)] text-[var(--bg-primary)] hover:opacity-90 font-bold text-sm rounded-xl shadow-sm transition cursor-pointer"
                     >
                         <Plus className="w-5 h-5" aria-hidden="true" />
                         <span>Create Examination</span>
                     </button>
                 </div>
 
-            {loading ? (
-                <div role="status" aria-live="polite" className="text-center py-16 text-neutral-400">
-                    <p className="text-xl">Loading examinations...</p>
-                </div>
-            ) : exams.length === 0 ? (
-                <div className="text-center py-16 bg-neutral-900 border border-neutral-800 rounded-2xl p-8">
-                    <p className="text-xl font-bold text-white mb-2">No Examinations Available</p>
-                    <p className="text-neutral-400 text-sm">Create an examination using the button above.</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {exams.map((exam) => (
-                        <div
-                            key={exam.id || exam._id}
-                            className="bg-neutral-900 border-2 border-neutral-800 rounded-2xl p-6 flex flex-col justify-between shadow-lg"
-                        >
-                            <div>
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="text-xs font-mono bg-neutral-800 text-[#ffe600] px-2.5 py-0.5 rounded border border-neutral-700">
-                                        {exam.subject || 'Competitive'}
-                                    </span>
-                                    <span
-                                        className={`text-xs font-bold px-2 py-0.5 rounded border ${
-                                            exam.isPublished
-                                                ? 'bg-emerald-950 text-emerald-300 border-emerald-500'
-                                                : 'bg-neutral-800 text-neutral-400 border-neutral-700'
-                                        }`}
-                                    >
-                                        {exam.isPublished ? 'Published' : 'Draft / Hidden'}
-                                    </span>
-                                </div>
+                {actionMsg && (
+                    <div role="status" className="p-3.5 bg-[var(--primary-subtle)] border border-[var(--border-color)] text-[var(--primary)] rounded-xl text-sm font-semibold flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>{actionMsg}</span>
+                    </div>
+                )}
 
-                                <h2 className="text-xl font-bold text-white mb-2">{exam.title}</h2>
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-6">{exam.description}</p>
-
-                                <div className="grid grid-cols-3 gap-2 py-3 px-4 bg-neutral-950 rounded-xl border border-neutral-800 mb-6 text-center text-sm">
-                                    <div>
-                                        <span className="text-xs text-neutral-400 block">Duration</span>
-                                        <span className="font-bold text-white">{exam.durationMinutes}m</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-xs text-neutral-400 block">Questions</span>
-                                        <span className="font-bold text-white">{exam.totalQuestions}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-xs text-neutral-400 block">Total Marks</span>
-                                        <span className="font-bold text-[#ffe600]">{exam.totalMarks}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
-                                <button
-                                    type="button"
-                                    onClick={() => handleTogglePublish(exam)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold rounded-lg border border-neutral-700 transition"
-                                >
-                                    {exam.isPublished ? (
-                                        <>
-                                            <EyeOff className="w-4 h-4 text-amber-400" aria-hidden="true" />
-                                            <span>Unpublish</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Eye className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-                                            <span>Publish</span>
-                                        </>
-                                    )}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleDeleteExam(exam.id || exam._id)}
-                                    className="p-2 text-red-400 hover:text-red-300 bg-neutral-800 rounded-lg border border-neutral-700 hover:border-red-500 transition"
-                                    aria-label={`Delete exam: ${exam.title}`}
-                                >
-                                    <Trash2 className="w-5 h-5" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Create Exam Modal Dialog */}
-            {showCreateModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="create-exam-title"
-                >
-                    <div className="bg-neutral-900 border-2 border-[#ffe600] rounded-2xl max-w-3xl w-full p-6 sm:p-8 text-white max-h-[92vh] overflow-y-auto shadow-2xl">
-                        <div className="flex justify-between items-center pb-4 mb-4 border-b border-neutral-800">
-                            <h2 id="create-exam-title" className="text-2xl font-extrabold text-[#ffe600]">
-                                Configure New Competitive Examination
-                            </h2>
-                            <button
-                                type="button"
-                                onClick={() => setShowCreateModal(false)}
-                                className="text-neutral-400 hover:text-white"
+                {loading ? (
+                    <div role="status" aria-live="polite" className="text-center py-16 text-[var(--text-muted)]">
+                        <p className="text-xl font-bold">Loading examinations...</p>
+                    </div>
+                ) : exams.length === 0 ? (
+                    <div className="text-center py-16 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-8 shadow-sm">
+                        <p className="text-xl font-bold text-[var(--text-primary)] mb-2">No Examinations Available</p>
+                        <p className="text-[var(--text-muted)] text-sm">Create an examination using the button above.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {exams.map((exam) => (
+                            <div
+                                key={exam.id || exam._id}
+                                className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:border-[var(--focus-ring)] transition"
                             >
-                                ✕
-                            </button>
-                        </div>
-
-                        {formError && (
-                            <div role="alert" className="p-3 bg-red-950 border border-red-500 text-red-200 rounded-lg mb-4 text-sm">
-                                {formError}
-                            </div>
-                        )}
-                        {formSuccess && (
-                            <div role="status" className="p-3 bg-emerald-950 border border-emerald-500 text-emerald-200 rounded-lg mb-4 text-sm flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                <span>{formSuccess}</span>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleCreateExam} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-neutral-200 mb-1">
-                                    Examination Title *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newExam.title}
-                                    onChange={(e) => setNewExam({ ...newExam, title: e.target.value })}
-                                    placeholder="e.g. All India Banking Aptitude Examination"
-                                    className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-3 text-sm text-white focus:border-[#ffe600] outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-neutral-200 mb-1">
-                                    Description & Instructions
-                                </label>
-                                <textarea
-                                    rows={2}
-                                    required
-                                    value={newExam.description}
-                                    onChange={(e) => setNewExam({ ...newExam, description: e.target.value })}
-                                    placeholder="Detailed description of coverage and competitive scope..."
-                                    className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-3 text-sm text-white focus:border-[#ffe600] outline-none"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-300 mb-1">Duration (Minutes) *</label>
-                                    <input
-                                        type="number"
-                                        min="5"
-                                        max="180"
-                                        required
-                                        value={newExam.durationMinutes}
-                                        onChange={(e) => setNewExam({ ...newExam, durationMinutes: e.target.value })}
-                                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2 text-sm text-white focus:border-[#ffe600] outline-none"
-                                    />
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-xs font-mono bg-[var(--primary-subtle)] text-[var(--primary)] px-2.5 py-0.5 rounded border border-[var(--border-color)] font-bold">
+                                            {exam.subject || 'Competitive'}
+                                        </span>
+                                        <span
+                                            className={`text-xs font-bold px-2.5 py-0.5 rounded border ${
+                                                exam.isPublished
+                                                    ? 'bg-[var(--success)]/20 text-[var(--success)] border-[var(--success)]/40'
+                                                    : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)] border-[var(--border-color)]'
+                                            }`}
+                                        >
+                                            {exam.isPublished ? 'Published' : 'Draft / Hidden'}
+                                        </span>
+                                    </div>
+
+                                    <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">{exam.title}</h2>
+                                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-6">{exam.description}</p>
+
+                                    <div className="grid grid-cols-3 gap-2 py-3 px-4 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-color)] mb-6 text-center text-sm">
+                                        <div>
+                                            <span className="text-xs text-[var(--text-muted)] block">Duration</span>
+                                            <span className="font-bold text-[var(--text-primary)]">{exam.durationMinutes}m</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-[var(--text-muted)] block">Questions</span>
+                                            <span className="font-bold text-[var(--text-primary)]">{exam.totalQuestions}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-[var(--text-muted)] block">Total Marks</span>
+                                            <span className="font-bold text-[var(--primary)]">{exam.totalMarks}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-300 mb-1">Subject</label>
-                                    <input
-                                        type="text"
-                                        value={newExam.subject}
-                                        onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
-                                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2 text-sm text-white focus:border-[#ffe600] outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-300 mb-1">Negative Marking / Question</label>
-                                    <input
-                                        type="number"
-                                        step="0.25"
-                                        value={newExam.negativeMarksPerQuestion}
-                                        onChange={(e) => setNewExam({ ...newExam, negativeMarksPerQuestion: e.target.value })}
-                                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2 text-sm text-white focus:border-[#ffe600] outline-none"
-                                    />
+
+                                <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTogglePublish(exam)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-bold rounded-lg border border-[var(--border-color)] transition cursor-pointer"
+                                    >
+                                        {exam.isPublished ? (
+                                            <>
+                                                <EyeOff className="w-4 h-4 text-[var(--warning)]" aria-hidden="true" />
+                                                <span>Unpublish</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eye className="w-4 h-4 text-[var(--success)]" aria-hidden="true" />
+                                                <span>Publish</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteExam(exam.id || exam._id)}
+                                        className="p-2 text-[var(--danger)] hover:bg-[var(--danger)]/15 bg-[var(--bg-tertiary)] rounded-lg border border-[var(--border-color)] hover:border-[var(--danger)]/50 transition cursor-pointer"
+                                        aria-label={`Delete exam: ${exam.title}`}
+                                    >
+                                        <Trash2 className="w-5 h-5" aria-hidden="true" />
+                                    </button>
                                 </div>
                             </div>
+                        ))}
+                    </div>
+                )}
 
-                            {/* Select Questions from Question Bank */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="block text-sm font-bold text-neutral-200">
-                                        Select Questions from Bank ({newExam.selectedQuestionIds.length} Selected) *
-                                    </label>
-                                </div>
-
-                                <div className="max-h-56 overflow-y-auto space-y-2 p-3 bg-neutral-950 border border-neutral-800 rounded-xl">
-                                    {availableQuestions.map((q) => {
-                                        const isSelected = newExam.selectedQuestionIds.includes(q._id);
-                                        return (
-                                            <label
-                                                key={q._id}
-                                                className={`p-2.5 rounded-lg border flex items-start gap-3 cursor-pointer text-xs transition ${
-                                                    isSelected
-                                                        ? 'bg-neutral-800 border-[#ffe600] text-white'
-                                                        : 'border-neutral-800 text-neutral-300 hover:bg-neutral-900'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => handleToggleQuestionSelect(q._id)}
-                                                    className="w-4 h-4 mt-0.5 accent-[#ffe600]"
-                                                />
-                                                <div className="flex-1">
-                                                    <span className="font-bold text-[#ffe600] mr-2">[{q.subject}]</span>
-                                                    <span>{q.questionText}</span>
-                                                </div>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+                {/* Create Exam Modal Dialog */}
+                {showCreateModal && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="create-exam-title"
+                    >
+                        <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl max-w-3xl w-full p-6 sm:p-8 text-[var(--text-primary)] max-h-[92vh] overflow-y-auto shadow-2xl">
+                            <div className="flex justify-between items-center pb-4 mb-4 border-b border-[var(--border-color)]">
+                                <h2 id="create-exam-title" className="text-2xl font-extrabold text-[var(--text-primary)]">
+                                    Configure New Competitive Examination
+                                </h2>
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateModal(false)}
-                                    className="px-5 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-xl"
+                                    className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-lg font-bold cursor-pointer"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="px-6 py-2.5 bg-[#ffe600] text-black font-bold rounded-xl hover:bg-yellow-400 disabled:opacity-50"
-                                >
-                                    {isSubmitting ? 'Creating Exam...' : 'Create & Publish Exam'}
+                                    ✕
                                 </button>
                             </div>
-                        </form>
+
+                            {formError && (
+                                <div role="alert" className="p-3 bg-[var(--danger)]/15 border border-[var(--danger)] text-[var(--danger)] rounded-lg mb-4 text-sm font-semibold flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{formError}</span>
+                                </div>
+                            )}
+                            {formSuccess && (
+                                <div role="status" className="p-3 bg-[var(--success)]/15 border border-[var(--success)] text-[var(--success)] rounded-lg mb-4 text-sm flex items-center gap-2 font-semibold">
+                                    <CheckCircle2 className="w-4 h-4 text-[var(--success)] shrink-0" />
+                                    <span>{formSuccess}</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleCreateExam} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">
+                                        Examination Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newExam.title}
+                                        onChange={(e) => setNewExam({ ...newExam, title: e.target.value })}
+                                        placeholder="e.g. All India Banking Aptitude Examination"
+                                        className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-3 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">
+                                        Description & Instructions
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        required
+                                        value={newExam.description}
+                                        onChange={(e) => setNewExam({ ...newExam, description: e.target.value })}
+                                        placeholder="Detailed description of coverage and competitive scope..."
+                                        className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-3 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Duration (Minutes) *</label>
+                                        <input
+                                            type="number"
+                                            min="5"
+                                            max="180"
+                                            required
+                                            value={newExam.durationMinutes}
+                                            onChange={(e) => setNewExam({ ...newExam, durationMinutes: e.target.value })}
+                                            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Subject</label>
+                                        <input
+                                            type="text"
+                                            value={newExam.subject}
+                                            onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+                                            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Negative Marking / Question</label>
+                                        <input
+                                            type="number"
+                                            step="0.25"
+                                            value={newExam.negativeMarksPerQuestion}
+                                            onChange={(e) => setNewExam({ ...newExam, negativeMarksPerQuestion: e.target.value })}
+                                            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Select Questions from Question Bank */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="block text-sm font-bold text-[var(--text-secondary)]">
+                                            Select Questions from Bank ({newExam.selectedQuestionIds.length} Selected) *
+                                        </label>
+                                    </div>
+
+                                    <div className="max-h-56 overflow-y-auto space-y-2 p-3 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl">
+                                        {availableQuestions.map((q) => {
+                                            const isSelected = newExam.selectedQuestionIds.includes(q._id);
+                                            return (
+                                                <label
+                                                    key={q._id}
+                                                    className={`p-2.5 rounded-lg border flex items-start gap-3 cursor-pointer text-xs transition ${
+                                                        isSelected
+                                                            ? 'bg-[var(--primary-subtle)] border-[var(--primary)] text-[var(--text-primary)] font-bold'
+                                                            : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => handleToggleQuestionSelect(q._id)}
+                                                        className="w-4 h-4 mt-0.5 accent-[var(--primary)]"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <span className="font-bold text-[var(--primary)] mr-2">[{q.subject}]</span>
+                                                        <span>{q.questionText}</span>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateModal(false)}
+                                        className="px-5 py-2.5 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold rounded-xl transition border border-[var(--border-color)] cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="px-6 py-2.5 bg-[var(--primary)] text-[var(--bg-primary)] font-bold rounded-xl shadow-sm hover:opacity-90 disabled:opacity-50 transition cursor-pointer"
+                                    >
+                                        {isSubmitting ? 'Creating Exam...' : 'Create & Publish Exam'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
             </div>
         </AdminLayout>
     );

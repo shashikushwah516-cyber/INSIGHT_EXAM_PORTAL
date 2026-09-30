@@ -5,6 +5,10 @@ export const resultService = {
         return apiClient.get('/results');
     },
 
+    getCandidateResults: async () => {
+        return apiClient.get('/results');
+    },
+
     getResultById: async (attemptId) => {
         return apiClient.get(`/results/${attemptId}`);
     },

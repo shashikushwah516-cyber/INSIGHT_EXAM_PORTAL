@@ -25,20 +25,22 @@ export default function AdminDashboard() {
     const { speak } = useSpeech();
 
     useEffect(() => {
+        let isMounted = true;
         const fetchOverview = async () => {
             try {
                 const res = await resultService.getAdminOverview();
-                if (res.success && res.overview) {
+                if (isMounted && res.success && res.overview) {
                     setOverview(res.overview);
                 }
             } catch (err) {
                 console.error('Error fetching admin overview:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchOverview();
+        return () => { isMounted = false; };
     }, []);
 
     return (
@@ -47,244 +49,262 @@ export default function AdminDashboard() {
             pageDescription="Overview of platform assessments, candidate results, question banks, and system metrics."
         >
             <div className="space-y-8">
-            {/* Header Greeting Banner */}
-            <div className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-950 border-2 border-neutral-800 p-6 sm:p-8 rounded-3xl mb-8 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-mono font-bold bg-[#ffe600] text-black px-3 py-1 rounded-full shadow-sm">
-                                ADMIN CONSOLE
-                            </span>
-                            <span className="text-xs font-mono bg-neutral-800 text-cyan-400 px-3 py-1 rounded-full border border-neutral-700">
-                                SYSTEM CONTROLLER
-                            </span>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-                            Administrator Control Center
-                        </h1>
-                        <p className="text-neutral-300 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-                            Oversee competitive examination scheduling, question bank items, candidate submissions, and platform-wide accessibility compliance.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                speak(
-                                    `Administrator Dashboard. Registered candidates: ${overview?.totalCandidates || 0}. Total examinations: ${overview?.totalExams || 0}. Question bank count: ${overview?.totalQuestions || 0}. Completed exam submissions: ${overview?.totalAttempts || 0}. Platform mean score: ${overview?.averageScore || 0} percent.`
-                                )
-                            }
-                            className="inline-flex items-center gap-2 px-4 py-3 bg-neutral-800 text-[#ffe600] border-2 border-[#ffe600] rounded-xl hover:bg-neutral-700 font-bold text-sm transition-all shadow-md active:scale-95"
-                            aria-label="Read admin platform overview metrics aloud"
-                        >
-                            <Volume2 className="w-5 h-5" aria-hidden="true" />
-                            <span>Read Metrics Aloud</span>
-                        </button>
-
-                        <Link
-                            to="/admin/questions"
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-[#ffe600] text-black font-extrabold rounded-xl hover:bg-yellow-400 text-sm transition-all shadow-lg shadow-yellow-500/10 active:scale-95"
-                        >
-                            <Plus className="w-5 h-5" aria-hidden="true" />
-                            <span>Add Question</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            {loading ? (
-                <div role="status" aria-live="polite" className="text-center py-16 text-neutral-400">
-                    <p className="text-xl">Loading platform metrics...</p>
-                </div>
-            ) : (
-                <>
-                    {/* Platform Summary Metrics */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-                        <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-cyan-400 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Candidates</span>
-                                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
-                                    <Users className="w-4 h-4" aria-hidden="true" />
-                                </div>
+                {/* Header Greeting Banner */}
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-6 sm:p-8 rounded-3xl shadow-sm relative overflow-hidden">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-mono font-bold bg-[var(--primary)] text-[var(--bg-primary)] px-3 py-1 rounded-full shadow-xs">
+                                    ADMIN CONSOLE
+                                </span>
+                                <span className="text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--text-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
+                                    SYSTEM CONTROLLER
+                                </span>
                             </div>
-                            <p className="text-3xl font-black text-white">{overview?.totalCandidates || 0}</p>
-                            <span className="text-xs text-neutral-400 mt-1 block">Registered students</span>
-                        </div>
-
-                        <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-purple-400 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Question Bank</span>
-                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-                                    <HelpCircle className="w-4 h-4" aria-hidden="true" />
-                                </div>
-                            </div>
-                            <p className="text-3xl font-black text-white">{overview?.totalQuestions || 0}</p>
-                            <span className="text-xs text-neutral-400 mt-1 block">Active question items</span>
-                        </div>
-
-                        <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-[#ffe600] p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Exams Scheduled</span>
-                                <div className="w-8 h-8 rounded-lg bg-[#ffe600]/10 flex items-center justify-center text-[#ffe600]">
-                                    <BookOpen className="w-4 h-4" aria-hidden="true" />
-                                </div>
-                            </div>
-                            <p className="text-3xl font-black text-[#ffe600]">{overview?.totalExams || 0}</p>
-                            <span className="text-xs text-neutral-400 mt-1 block">Competitive tests</span>
-                        </div>
-
-                        <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-emerald-500 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Submissions</span>
-                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                                </div>
-                            </div>
-                            <p className="text-3xl font-black text-emerald-400">{overview?.totalAttempts || 0}</p>
-                            <span className="text-xs text-neutral-400 mt-1 block">Completed exams</span>
-                        </div>
-
-                        <div className="bg-neutral-900/90 border-2 border-neutral-800 hover:border-amber-400 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Platform Mean</span>
-                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-                                    <TrendingUp className="w-4 h-4" aria-hidden="true" />
-                                </div>
-                            </div>
-                            <p className="text-3xl font-black text-amber-300">
-                                {overview?.averageScore || 0}%
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[var(--text-primary)] tracking-tight">
+                                Administrator Control Center
+                            </h2>
+                            <p className="text-[var(--text-secondary)] text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
+                                Oversee competitive examination scheduling, question bank items, candidate submissions, and platform-wide accessibility compliance.
                             </p>
-                            <span className="text-xs text-neutral-400 mt-1 block">Candidate average</span>
+                        </div>
+
+                        <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    speak(
+                                        `Administrator Dashboard. Registered candidates: ${overview?.totalCandidates || 0}. Total examinations: ${overview?.totalExams || 0}. Question bank count: ${overview?.totalQuestions || 0}. Completed exam submissions: ${overview?.totalAttempts || 0}. Platform mean score: ${overview?.averageScore || 0} percent.`,
+                                        { force: true }
+                                    )
+                                }
+                                className="inline-flex items-center gap-2 min-h-[2.75rem] px-4 py-2.5 bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-primary)] font-bold text-sm transition-all shadow-xs cursor-pointer"
+                                aria-label="Read admin platform overview metrics aloud"
+                            >
+                                <Volume2 className="w-5 h-5 text-[var(--primary)] shrink-0" aria-hidden="true" />
+                                <span>Read Metrics Aloud</span>
+                            </button>
+
+                            <Link
+                                to="/admin/questions"
+                                className="inline-flex items-center gap-2 min-h-[2.75rem] px-5 py-2.5 bg-[var(--primary)] text-[var(--bg-primary)] rounded-xl hover:opacity-90 text-sm font-bold shadow-sm transition"
+                            >
+                                <Plus className="w-5 h-5 shrink-0" aria-hidden="true" />
+                                <span>Add Question</span>
+                            </Link>
                         </div>
                     </div>
+                </div>
 
-                    {/* Quick Management Links */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <Link
-                            to="/admin/questions"
-                            className="p-6 bg-neutral-900/90 border-2 border-neutral-800 hover:border-[#ffe600] rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-xl"
-                        >
-                            <div>
-                                <div className="w-12 h-12 rounded-2xl bg-[#ffe600]/10 flex items-center justify-center text-[#ffe600] mb-4 border border-[#ffe600]/20">
-                                    <HelpCircle className="w-7 h-7" aria-hidden="true" />
-                                </div>
-                                <h2 className="text-xl font-bold text-white mb-2">Question Bank Management</h2>
-                                <p className="text-sm text-neutral-300 leading-relaxed mb-6">
-                                    Add, edit, and organize competitive exam questions with 4 options, correct answer keys, marks, negative marking, and accessible audio descriptions.
-                                </p>
-                            </div>
-                            <span className="text-sm font-bold text-[#ffe600] inline-flex items-center gap-1.5">
-                                <span>Manage Question Bank</span>
-                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                            </span>
-                        </Link>
-
-                        <Link
-                            to="/admin/exams"
-                            className="p-6 bg-neutral-900/90 border-2 border-neutral-800 hover:border-cyan-400 rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-xl"
-                        >
-                            <div>
-                                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-4 border border-cyan-500/20">
-                                    <BookOpen className="w-7 h-7" aria-hidden="true" />
-                                </div>
-                                <h2 className="text-xl font-bold text-white mb-2">Examination Builder</h2>
-                                <p className="text-sm text-neutral-300 leading-relaxed mb-6">
-                                    Configure new timed examinations, set durations, select questions from the bank, toggle negative marking, and publish them to candidate portals.
-                                </p>
-                            </div>
-                            <span className="text-sm font-bold text-cyan-400 inline-flex items-center gap-1.5">
-                                <span>Create & Publish Exams</span>
-                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                            </span>
-                        </Link>
-
-                        <Link
-                            to="/admin/attempts"
-                            className="p-6 bg-neutral-900/90 border-2 border-neutral-800 hover:border-emerald-500 rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-xl"
-                        >
-                            <div>
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4 border border-emerald-500/20">
-                                    <Activity className="w-7 h-7" aria-hidden="true" />
-                                </div>
-                                <h2 className="text-xl font-bold text-white mb-2">Candidate Attempts Monitor</h2>
-                                <p className="text-sm text-neutral-300 leading-relaxed mb-6">
-                                    Inspect candidate exam attempts in real time, audit submission scores, and analyze pass/fail outcomes across subjects.
-                                </p>
-                            </div>
-                            <span className="text-sm font-bold text-emerald-400 inline-flex items-center gap-1.5">
-                                <span>Monitor Candidate Attempts</span>
-                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                            </span>
-                        </Link>
+                {loading ? (
+                    <div role="status" aria-live="polite" className="text-center py-16 text-[var(--text-muted)]">
+                        <p className="text-xl font-bold">Loading platform metrics...</p>
                     </div>
-
-                    {/* Recent Candidate Submissions Log */}
-                    <section aria-labelledby="recent-attempts-title" className="bg-neutral-900/90 border-2 border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h2 id="recent-attempts-title" className="text-xl font-bold text-white">
-                                    Recent Candidate Submissions
-                                </h2>
-                                <p className="text-xs text-neutral-400 mt-0.5">Live assessment log across all competitive tests</p>
+                ) : (
+                    <>
+                        {/* Platform Summary Metrics */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 mb-8">
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] p-5 rounded-2xl transition-all duration-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Candidates</span>
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)]">
+                                        <Users className="w-4 h-4" aria-hidden="true" />
+                                    </div>
+                                </div>
+                                <p className="text-3xl font-black text-[var(--text-primary)]">{overview?.totalCandidates || 0}</p>
+                                <span className="text-xs text-[var(--text-muted)] mt-1 block">Registered students</span>
                             </div>
+
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] p-5 rounded-2xl transition-all duration-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Question Bank</span>
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)]">
+                                        <HelpCircle className="w-4 h-4" aria-hidden="true" />
+                                    </div>
+                                </div>
+                                <p className="text-3xl font-black text-[var(--text-primary)]">{overview?.totalQuestions || 0}</p>
+                                <span className="text-xs text-[var(--text-muted)] mt-1 block">Active question items</span>
+                            </div>
+
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] p-5 rounded-2xl transition-all duration-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Exams Scheduled</span>
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--warning)]/15 flex items-center justify-center text-[var(--warning)]">
+                                        <BookOpen className="w-4 h-4" aria-hidden="true" />
+                                    </div>
+                                </div>
+                                <p className="text-3xl font-black text-[var(--text-primary)]">{overview?.totalExams || 0}</p>
+                                <span className="text-xs text-[var(--text-muted)] mt-1 block">Competitive tests</span>
+                            </div>
+
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] p-5 rounded-2xl transition-all duration-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Submissions</span>
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--success)]/15 flex items-center justify-center text-[var(--success)]">
+                                        <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                                    </div>
+                                </div>
+                                <p className="text-3xl font-black text-[var(--success)]">{overview?.totalAttempts || 0}</p>
+                                <span className="text-xs text-[var(--text-muted)] mt-1 block">Completed exams</span>
+                            </div>
+
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] p-5 rounded-2xl transition-all duration-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Platform Mean</span>
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)]">
+                                        <TrendingUp className="w-4 h-4" aria-hidden="true" />
+                                    </div>
+                                </div>
+                                <p className="text-3xl font-black text-[var(--primary)]">
+                                    {overview?.averageScore || 0}%
+                                </p>
+                                <span className="text-xs text-[var(--text-muted)] mt-1 block">Candidate average</span>
+                            </div>
+                        </div>
+
+                        {/* Quick Management Links */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <Link
+                                to="/admin/students"
+                                className="p-6 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-sm"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] mb-4 border border-[var(--border-color)]">
+                                        <Users className="w-7 h-7" aria-hidden="true" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Student Management</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                                        Search enrolled candidates, register new student profiles, edit credentials, manage account status, and view exam logs.
+                                    </p>
+                                </div>
+                                <span className="text-sm font-bold text-[var(--primary)] inline-flex items-center gap-1.5">
+                                    <span>Manage Candidates</span>
+                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                </span>
+                            </Link>
+
+                            <Link
+                                to="/admin/questions"
+                                className="p-6 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-sm"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] mb-4 border border-[var(--border-color)]">
+                                        <HelpCircle className="w-7 h-7" aria-hidden="true" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Question Bank Management</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                                        Add, edit, and organize competitive exam questions with 4 options, correct answer keys, marks, negative marking, and accessible audio descriptions.
+                                    </p>
+                                </div>
+                                <span className="text-sm font-bold text-[var(--primary)] inline-flex items-center gap-1.5">
+                                    <span>Manage Question Bank</span>
+                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                </span>
+                            </Link>
+
+                            <Link
+                                to="/admin/exams"
+                                className="p-6 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-sm"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] mb-4 border border-[var(--border-color)]">
+                                        <BookOpen className="w-7 h-7" aria-hidden="true" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Examination Builder</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                                        Configure new timed examinations, set durations, select questions from the bank, toggle negative marking, and publish them to candidate portals.
+                                    </p>
+                                </div>
+                                <span className="text-sm font-bold text-[var(--primary)] inline-flex items-center gap-1.5">
+                                    <span>Create & Publish Exams</span>
+                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                </span>
+                            </Link>
+
                             <Link
                                 to="/admin/attempts"
-                                className="text-xs font-bold text-[#ffe600] hover:underline inline-flex items-center gap-1"
+                                className="p-6 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--focus-ring)] rounded-3xl transition-all duration-200 flex flex-col justify-between shadow-sm"
                             >
-                                <span>View All Records</span>
-                                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-[var(--success)]/15 flex items-center justify-center text-[var(--success)] mb-4 border border-[var(--border-color)]">
+                                        <Activity className="w-7 h-7" aria-hidden="true" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Candidate Attempts Monitor</h2>
+                                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                                        Inspect candidate exam attempts in real time, audit submission scores, and analyze pass/fail outcomes across subjects.
+                                    </p>
+                                </div>
+                                <span className="text-sm font-bold text-[var(--success)] inline-flex items-center gap-1.5">
+                                    <span>Monitor Candidate Attempts</span>
+                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                </span>
                             </Link>
                         </div>
 
-                        {overview?.recentAttempts && overview.recentAttempts.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse text-sm">
-                                    <thead>
-                                        <tr className="border-b border-neutral-800 text-neutral-400 uppercase text-xs">
-                                            <th className="py-3 px-4 font-bold">Candidate</th>
-                                            <th className="py-3 px-4 font-bold">Roll Number</th>
-                                            <th className="py-3 px-4 font-bold">Examination</th>
-                                            <th className="py-3 px-4 font-bold text-center">Score</th>
-                                            <th className="py-3 px-4 font-bold text-center">Percentage</th>
-                                            <th className="py-3 px-4 font-bold text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-neutral-800">
-                                        {overview.recentAttempts.map((att, i) => (
-                                            <tr key={i} className="hover:bg-neutral-850/80 transition-colors">
-                                                <td className="py-3.5 px-4 font-bold text-white">{att.candidateName}</td>
-                                                <td className="py-3.5 px-4 font-mono text-[#ffe600] font-bold">{att.candidateRoll}</td>
-                                                <td className="py-3.5 px-4 text-neutral-300">{att.examTitle}</td>
-                                                <td className="py-3.5 px-4 text-center font-bold text-white">
-                                                    {att.obtainedMarks} / {att.totalMarks}
-                                                </td>
-                                                <td className="py-3.5 px-4 text-center">
-                                                    <span className="font-mono font-bold text-xs bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500">
-                                                        {att.percentage}%
-                                                    </span>
-                                                </td>
-                                                <td className="py-3.5 px-4 text-right">
-                                                    <Link
-                                                        to={`/results/${att.id}`}
-                                                        className="text-xs font-bold text-[#ffe600] hover:underline"
-                                                    >
-                                                        Review Solutions
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {/* Recent Candidate Submissions Log */}
+                        <section aria-labelledby="recent-attempts-title" className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 shadow-sm">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 id="recent-attempts-title" className="text-xl font-bold text-[var(--text-primary)]">
+                                        Recent Candidate Submissions
+                                    </h2>
+                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">Live assessment log across all competitive tests</p>
+                                </div>
+                                <Link
+                                    to="/admin/attempts"
+                                    className="text-xs font-bold text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                                >
+                                    <span>View All Records</span>
+                                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Link>
                             </div>
-                        ) : (
-                            <p className="text-neutral-400 text-sm">No recent submissions recorded yet.</p>
-                        )}
-                    </section>
-                </>
-            )}
+
+                            {overview?.recentAttempts && overview.recentAttempts.length > 0 ? (
+                                <div className="overflow-x-auto scrollbar-thin">
+                                    <table className="w-full min-w-[620px] text-left border-collapse text-sm">
+                                        <thead>
+                                            <tr className="border-b border-[var(--border-color)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] uppercase text-xs">
+                                                <th className="py-3 px-4 font-bold">Candidate</th>
+                                                <th className="py-3 px-4 font-bold">Roll Number</th>
+                                                <th className="py-3 px-4 font-bold">Examination</th>
+                                                <th className="py-3 px-4 font-bold text-center">Score</th>
+                                                <th className="py-3 px-4 font-bold text-center">Percentage</th>
+                                                <th className="py-3 px-4 font-bold text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--border-color)]">
+                                            {overview.recentAttempts.map((att, i) => (
+                                                <tr key={i} className="hover:bg-[var(--bg-tertiary)]/50 transition-colors">
+                                                    <td className="py-3.5 px-4 font-bold text-[var(--text-primary)]">{att.candidateName}</td>
+                                                    <td className="py-3.5 px-4 font-mono text-[var(--primary)] font-bold">{att.candidateRoll}</td>
+                                                    <td className="py-3.5 px-4 text-[var(--text-secondary)]">{att.examTitle}</td>
+                                                    <td className="py-3.5 px-4 text-center font-bold text-[var(--text-primary)]">
+                                                        {att.obtainedMarks} / {att.totalMarks}
+                                                    </td>
+                                                    <td className="py-3.5 px-4 text-center">
+                                                        <span className="font-mono font-bold text-xs bg-[var(--success)]/20 text-[var(--success)] px-2.5 py-0.5 rounded border border-[var(--success)]/40">
+                                                            {att.percentage}%
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3.5 px-4 text-right">
+                                                        <Link
+                                                            to={`/results/${att.id}`}
+                                                            className="text-xs font-bold text-[var(--primary)] hover:underline"
+                                                        >
+                                                            Review Solutions
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <p className="text-[var(--text-muted)] text-sm">No recent submissions recorded yet.</p>
+                            )}
+                        </section>
+                    </>
+                )}
             </div>
         </AdminLayout>
     );

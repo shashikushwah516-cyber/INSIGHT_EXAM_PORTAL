@@ -35,6 +35,10 @@ export const examService = {
 
     submitExam: async (attemptId, answers = []) => {
         return apiClient.post(`/attempts/${attemptId}/submit`, { answers });
+    },
+
+    getActiveSession: async () => {
+        return apiClient.get('/attempts/active/session');
     }
 };
 

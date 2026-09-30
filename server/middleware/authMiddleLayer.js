@@ -48,4 +48,22 @@ const candidateOnly = (req, res, next) => {
     next();
 };
 
-module.exports = { protect, adminOnly, candidateOnly };
+const optionalProtect = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+    } catch (error) {
+        // Token invalid or expired, continue as unauthenticated guest
+    }
+    next();
+};
+
+module.exports = { protect, optionalProtect, adminOnly, candidateOnly };

@@ -217,3 +217,13 @@ test('4. Complete Admin Workflow', async () => {
     assert.equal(createExamRes.status, 201);
     assert.ok(createExamData.exam._id);
 });
+
+test('5. Public routes serve SPA frontend properly', async () => {
+    const publicPaths = ['/', '/about', '/how-it-works', '/help', '/contact', '/login', '/register', '/accessibility'];
+    for (const path of publicPaths) {
+        const res = await fetch(`${FRONTEND_URL}${path}`);
+        assert.equal(res.status, 200, `Failed to load ${path}`);
+        const html = await res.text();
+        assert.ok(html.includes('Insight Exam') || html.includes('root'), `Invalid HTML for ${path}`);
+    }
+});

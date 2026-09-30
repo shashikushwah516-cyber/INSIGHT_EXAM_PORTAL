@@ -20,13 +20,13 @@ const userPreferencesSchema = new mongoose.Schema({
     },
     theme: {
         type: String,
-        enum: ['high-contrast-yellow', 'high-contrast-cyan', 'standard-dark', 'soft-light'],
-        default: 'high-contrast-yellow'
+        enum: ['clean-light', 'high-contrast-yellow', 'high-contrast-cyan', 'standard-dark', 'soft-light'],
+        default: 'clean-light'
     },
     fontSize: {
         type: String,
         enum: ['normal', 'large', 'extra-large'],
-        default: 'large'
+        default: 'normal'
     },
     reducedMotion: {
         type: Boolean,
@@ -80,6 +80,10 @@ const userSchema = new mongoose.Schema({
     isExamCompleted: {
         type: Boolean,
         default: false
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     },
     preferences: {
         type: userPreferencesSchema,

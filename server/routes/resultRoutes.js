@@ -3,6 +3,7 @@ const Attempt = require('../models/attempt');
 const User = require('../models/user');
 const Exam = require('../models/exam');
 const Question = require('../models/question');
+const PracticeAttempt = require('../models/practiceAttempt');
 const { protect, adminOnly } = require('../middleware/authMiddleLayer');
 
 const router = express.Router();
@@ -24,10 +25,12 @@ router.get('/', protect, async (req, res) => {
             results: attempts.map(att => ({
                 id: att._id,
                 attemptId: att._id,
+                _id: att._id,
                 examId: att.examId,
                 examTitle: att.examTitle,
                 startedAt: att.startedAt,
                 submittedAt: att.submittedAt,
+                createdAt: att.createdAt || att.submittedAt,
                 score: att.score
             }))
         });
@@ -39,52 +42,18 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
-// GET /results/:attemptId - Detailed result with full question review
-router.get('/:attemptId', protect, async (req, res) => {
-    try {
-        const attempt = await Attempt.findById(req.params.attemptId);
-
-        if (!attempt) {
-            return res.status(404).json({
-                success: false,
-                message: 'Result not found.'
-            });
-        }
-
-        if (attempt.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized access to this result.'
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            result: {
-                attemptId: attempt._id,
-                examId: attempt.examId,
-                examTitle: attempt.examTitle,
-                startedAt: attempt.startedAt,
-                submittedAt: attempt.submittedAt,
-                durationMinutes: attempt.durationMinutes,
-                score: attempt.score
-            }
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to fetch detailed result.'
-        });
-    }
-});
-
 // GET /results/analytics/candidate - Candidate's comprehensive analytics
+// NOTE: MUST be defined BEFORE /:attemptId to prevent Express route collision!
 router.get('/analytics/candidate', protect, async (req, res) => {
     try {
-        const attempts = await Attempt.find({
-            userId: req.user.id,
-            status: 'submitted'
-        }).sort({ submittedAt: 1 });
+        const [attempts, practiceHistory] = await Promise.all([
+            Attempt.find({ userId: req.user.id, status: 'submitted' }).sort({ submittedAt: 1 }),
+            PracticeAttempt.find({ userId: req.user.id }).sort({ createdAt: -1 })
+        ]);
+
+        const totalPracticed = practiceHistory.reduce((sum, h) => sum + (h.totalQuestions || 0), 0);
+        const totalPracticeCorrect = practiceHistory.reduce((sum, h) => sum + (h.correct || 0), 0);
+        const practiceAccuracy = totalPracticed > 0 ? Math.round((totalPracticeCorrect / totalPracticed) * 100) : 0;
 
         const totalExams = attempts.length;
         if (totalExams === 0) {
@@ -92,14 +61,16 @@ router.get('/analytics/candidate', protect, async (req, res) => {
                 success: true,
                 analytics: {
                     totalExamsAttempted: 0,
+                    totalPracticed,
+                    practiceAccuracy,
                     averagePercentage: 0,
-                    accuracy: 0,
+                    accuracy: practiceAccuracy || 0,
                     attemptRate: 0,
                     averageTimePerQuestion: 0,
                     subjectAccuracy: [],
                     history: [],
                     recommendations: [
-                        'Take your first mock examination to start tracking your performance.',
+                        'Take your first timed mock examination to start tracking your performance.',
                         'Try subject-wise practice in Quantitative Aptitude and Reasoning to build familiarity.'
                     ]
                 }
@@ -133,6 +104,8 @@ router.get('/analytics/candidate', protect, async (req, res) => {
             }
 
             return {
+                id: att._id,
+                attemptId: att._id,
                 examTitle: att.examTitle,
                 date: att.submittedAt,
                 percentage: sc.percentage || 0,
@@ -144,26 +117,26 @@ router.get('/analytics/candidate', protect, async (req, res) => {
         const averagePercentage = Math.round((totalPercentageSum / totalExams) * 10) / 10;
         const accuracy = totalAttemptedAll > 0 ? Math.round((totalCorrectAll / totalAttemptedAll) * 100) : 0;
         const attemptRate = totalQuestionsAll > 0 ? Math.round((totalAttemptedAll / totalQuestionsAll) * 100) : 0;
-        const avgTimePerQuestion = totalAttemptedAll > 0 ? Math.round((totalTimeSeconds / totalAttemptedAll)) : 0;
+        const avgTimePerQuestion = totalAttemptedAll > 0 ? Math.round(totalTimeSeconds / totalAttemptedAll) : 0;
 
-        const subjectAccuracy = Object.keys(subjectAggregates).map(name => {
-            const data = subjectAggregates[name];
-            const acc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
-            return {
-                subject: name,
-                accuracy: acc,
-                total: data.total,
-                correct: data.correct
-            };
-        });
+        const subjectAccuracy = Object.entries(subjectAggregates).map(([subject, data]) => ({
+            subject,
+            totalQuestions: data.total,
+            correct: data.correct,
+            accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
+        }));
 
-        // AI/Algorithm recommendations based on weak areas
+        // Dynamic Recommendations based on metrics
         const recommendations = [];
+        if (accuracy < 60) {
+            recommendations.push('Overall accuracy is below 60%. Focus on question comprehension and practice with voice narration enabled.');
+        } else if (accuracy >= 80) {
+            recommendations.push('High accuracy achieved! You are well-prepared for competitive standards.');
+        }
+
         subjectAccuracy.forEach(sa => {
-            if (sa.accuracy < 60) {
-                recommendations.push(`Accuracy in ${sa.subject} is ${sa.accuracy}%. Focus on practicing foundational questions in this topic.`);
-            } else if (sa.accuracy >= 80) {
-                recommendations.push(`Strong performance in ${sa.subject} (${sa.accuracy}%). Maintain speed and consistency.`);
+            if (sa.accuracy < 50 && sa.totalQuestions >= 5) {
+                recommendations.push(`Subject Alert: Accuracy in ${sa.subject} is ${sa.accuracy}%. Try targeted practice sessions in this area.`);
             }
         });
 
@@ -179,6 +152,8 @@ router.get('/analytics/candidate', protect, async (req, res) => {
             success: true,
             analytics: {
                 totalExamsAttempted: totalExams,
+                totalPracticed,
+                practiceAccuracy,
                 averagePercentage,
                 accuracy,
                 attemptRate,
@@ -198,6 +173,7 @@ router.get('/analytics/candidate', protect, async (req, res) => {
 });
 
 // GET /results/admin/overview - Admin high-level system dashboard analytics
+// NOTE: MUST be defined BEFORE /:attemptId to prevent Express route collision!
 router.get('/admin/overview', protect, adminOnly, async (req, res) => {
     try {
         const totalCandidates = await User.countDocuments({ role: { $in: ['candidate', 'student'] } });
@@ -225,6 +201,7 @@ router.get('/admin/overview', protect, adminOnly, async (req, res) => {
                 averageScore: avgScore,
                 recentAttempts: recentAttempts.map(att => ({
                     id: att._id,
+                    attemptId: att._id,
                     candidateRoll: att.userId ? att.userId.rollNumber : 'Unknown',
                     candidateName: att.userId ? att.userId.name : 'Unknown',
                     examTitle: att.examTitle,
@@ -239,6 +216,47 @@ router.get('/admin/overview', protect, adminOnly, async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Unable to fetch admin overview.'
+        });
+    }
+});
+
+// GET /results/:attemptId - Detailed result with full question review
+router.get('/:attemptId', protect, async (req, res) => {
+    try {
+        const attempt = await Attempt.findById(req.params.attemptId);
+
+        if (!attempt) {
+            return res.status(404).json({
+                success: false,
+                message: 'Result not found.'
+            });
+        }
+
+        if (attempt.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized access to this result.'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            result: {
+                id: attempt._id,
+                attemptId: attempt._id,
+                _id: attempt._id,
+                examId: attempt.examId,
+                examTitle: attempt.examTitle,
+                startedAt: attempt.startedAt,
+                submittedAt: attempt.submittedAt,
+                durationMinutes: attempt.durationMinutes,
+                score: attempt.score
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Unable to fetch detailed result.'
         });
     }
 });

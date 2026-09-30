@@ -1,92 +1,241 @@
-// Keyboard-First Navigation Controller for Visually Impaired Candidates
+// Controlled Application-Level Keyboard Navigation Engine
+// Specifically engineered for visually impaired candidates per Section 5 & WCAG 2.2 AA/AAA
 
 export const setupKeyNavigation = (handlers = {}) => {
     const handleKeyDown = (event) => {
-        // If the user is actively typing in a text field, do not hijack normal typing
-        const targetTag = event.target.tagName.toLowerCase();
-        const isInputField = targetTag === 'input' || targetTag === 'textarea';
+        // =========================================================================
+        // 1. KEYBOARD CONFLICT PROTECTION (Section 9)
+        // Global shortcuts must NOT interfere with text input questions, textareas,
+        // search fields, login fields, registration fields, or any editable input.
+        // =========================================================================
+        const target = event.target;
+        const targetTag = (target?.tagName || '').toLowerCase();
+        const isInputField =
+            targetTag === 'input' ||
+            targetTag === 'textarea' ||
+            targetTag === 'select' ||
+            target?.isContentEditable ||
+            target?.getAttribute?.('contenteditable') === 'true' ||
+            target?.getAttribute?.('role') === 'textbox';
 
-        if (isInputField && !['Enter', 'Escape'].includes(event.key)) {
+        if (isInputField) {
+            // Allow natural keyboard behavior inside form controls
             return;
         }
 
-        const key = event.key.toUpperCase();
+        const key = event.key;
+        const lowerKey = key.toLowerCase();
 
-        switch (event.key) {
-            case 'ArrowDown':
-            case 'ArrowRight':
-                if (handlers.onNext) {
-                    event.preventDefault();
-                    handlers.onNext();
+        // Check if submission confirmation dialog is currently active
+        const isModalOpen = typeof handlers.isSubmitModalOpen === 'function'
+            ? handlers.isSubmitModalOpen()
+            : !!handlers.isSubmitModalOpen;
+
+        // =========================================================================
+        // 2. SUBMISSION CONFIRMATION CONTROLS (Section 6 & 7)
+        // Y = Confirm Submission
+        // Escape = Cancel Submission
+        // =========================================================================
+        if (isModalOpen) {
+            if (lowerKey === 'y') {
+                event.preventDefault();
+                if (handlers.onConfirmSubmit) {
+                    handlers.onConfirmSubmit();
                 }
-                break;
+                return;
+            }
 
-            case 'ArrowUp':
-            case 'ArrowLeft':
-                if (handlers.onPrev) {
-                    event.preventDefault();
-                    handlers.onPrev();
-                }
-                break;
-
-            case 'Enter':
-            case ' ':
-                if (handlers.onSelect && !isInputField) {
-                    event.preventDefault();
-                    handlers.onSelect();
-                }
-                break;
-
-            case 'Backspace':
-                if (handlers.onBack && !isInputField) {
-                    handlers.onBack();
-                }
-                break;
-
-            case 'Escape':
-                if (handlers.onEscape) {
+            if (key === 'Escape') {
+                event.preventDefault();
+                if (handlers.onCancelSubmit) {
+                    handlers.onCancelSubmit();
+                } else if (handlers.onEscape) {
                     handlers.onEscape();
                 }
-                break;
+                return;
+            }
 
-            default:
-                // Option number keys (1-4)
-                if (['1', '2', '3', '4'].includes(event.key)) {
-                    if (handlers.onNumberKey) {
-                        event.preventDefault();
-                        handlers.onNumberKey(event.key);
-                    }
-                }
-                // Letter shortcut keys
-                else if (key === 'N' && handlers.onNext && !isInputField) {
-                    event.preventDefault();
-                    handlers.onNext();
-                } else if (key === 'P' && handlers.onPrev && !isInputField) {
-                    event.preventDefault();
-                    handlers.onPrev();
-                } else if (key === 'M' && handlers.onMark && !isInputField) {
-                    event.preventDefault();
-                    handlers.onMark();
-                } else if (key === 'C' && handlers.onClear && !isInputField) {
-                    event.preventDefault();
-                    handlers.onClear();
-                } else if ((key === 'R' || key === 'Q') && handlers.onReadQuestion && !isInputField) {
-                    event.preventDefault();
-                    handlers.onReadQuestion();
-                } else if (key === 'O' && handlers.onReadOptions && !isInputField) {
-                    event.preventDefault();
-                    handlers.onReadOptions();
-                } else if (key === 'T' && handlers.onReadTime && !isInputField) {
-                    event.preventDefault();
-                    handlers.onReadTime();
-                } else if (key === 'S' && handlers.onReadSelected && !isInputField) {
-                    event.preventDefault();
-                    handlers.onReadSelected();
-                } else if ((event.key === '?' || key === 'H') && handlers.onHelp && !isInputField) {
-                    event.preventDefault();
-                    handlers.onHelp();
-                }
-                break;
+            // Lock out all exam navigation while the submission confirmation modal is open
+            return;
+        }
+
+        // =========================================================================
+        // 3. CORE ACCESSIBLE EXAM CONTROLS (Section 8)
+        // =========================================================================
+
+        // R = Repeat Current Question (Section 2)
+        if (lowerKey === 'r') {
+            event.preventDefault();
+            if (handlers.onRepeatQuestion) {
+                handlers.onRepeatQuestion();
+            } else if (handlers.onRepeatContent) {
+                handlers.onRepeatContent();
+            } else if (handlers.onReadQuestion) {
+                handlers.onReadQuestion();
+            }
+            return;
+        }
+
+        // Arrow Right = Next Question (Section 4)
+        if (key === 'ArrowRight') {
+            event.preventDefault();
+            if (handlers.onNextQuestion) {
+                handlers.onNextQuestion();
+            } else if (handlers.onNext) {
+                handlers.onNext();
+            }
+            return;
+        }
+
+        // Arrow Left = Previous Question (Section 4)
+        if (key === 'ArrowLeft') {
+            event.preventDefault();
+            if (handlers.onPrevQuestion) {
+                handlers.onPrevQuestion();
+            } else if (handlers.onPrev) {
+                handlers.onPrev();
+            }
+            return;
+        }
+
+        // 1, 2, 3, 4 = Option Selection (Section 1 & 3)
+        if (['1', '2', '3', '4'].includes(key)) {
+            event.preventDefault();
+            if (handlers.onNumberKey) {
+                handlers.onNumberKey(key);
+            }
+            return;
+        }
+
+        // S = Submit Exam (Opens Confirmation Modal) (Section 5)
+        if (lowerKey === 's') {
+            event.preventDefault();
+            if (handlers.onOpenSubmit) {
+                handlers.onOpenSubmit();
+            } else if (handlers.onSubmit) {
+                handlers.onSubmit();
+            }
+            return;
+        }
+
+        // Escape = Stop audio speech
+        if (key === 'Escape') {
+            if (handlers.onEscape) {
+                handlers.onEscape();
+            }
+            return;
+        }
+
+        // =========================================================================
+        // 4. AUXILIARY / COMPATIBILITY CONTROLS
+        // =========================================================================
+
+        // Spacebar = Also triggers Repeat Question (when not on a button)
+        if (key === ' ' && targetTag !== 'button') {
+            event.preventDefault();
+            if (handlers.onRepeatQuestion) {
+                handlers.onRepeatQuestion();
+            } else if (handlers.onRepeatContent) {
+                handlers.onRepeatContent();
+            } else if (handlers.onReadQuestion) {
+                handlers.onReadQuestion();
+            }
+            return;
+        }
+
+        // Option Up / Down navigation
+        if (key === 'ArrowDown') {
+            if (handlers.onOptionDown) {
+                event.preventDefault();
+                handlers.onOptionDown();
+            }
+            return;
+        }
+
+        if (key === 'ArrowUp') {
+            if (handlers.onOptionUp) {
+                event.preventDefault();
+                handlers.onOptionUp();
+            }
+            return;
+        }
+
+        // Enter = Confirm highlighted option (when not focused on a native button)
+        if (key === 'Enter') {
+            if (handlers.onSelect && targetTag !== 'button') {
+                event.preventDefault();
+                handlers.onSelect();
+            }
+            return;
+        }
+
+        // M = Toggle Mark for Review
+        if (lowerKey === 'm' && handlers.onMark) {
+            event.preventDefault();
+            handlers.onMark();
+            return;
+        }
+
+        // Backspace or C = Clear Answer
+        if ((key === 'Backspace' || lowerKey === 'c') && handlers.onClear) {
+            event.preventDefault();
+            handlers.onClear();
+            return;
+        }
+
+        // I = Describe Visual Figure (Level 1 Quick Description - Part 6, 10, 15)
+        if (lowerKey === 'i') {
+            event.preventDefault();
+            if (handlers.onDescribeVisual) {
+                handlers.onDescribeVisual();
+            } else if (handlers.onVisualQuick) {
+                handlers.onVisualQuick();
+            }
+            return;
+        }
+
+        // D = Detailed Visual Description (Level 2 Detailed Description - Part 10, 15)
+        if (lowerKey === 'd') {
+            event.preventDefault();
+            if (handlers.onDetailedVisual) {
+                handlers.onDetailedVisual();
+            } else if (handlers.onVisualDetailed) {
+                handlers.onVisualDetailed();
+            }
+            return;
+        }
+
+        // T = Hear remaining time (Part 4 & 15)
+        if (lowerKey === 't') {
+            event.preventDefault();
+            if (handlers.onReadTime) {
+                handlers.onReadTime();
+            } else if (handlers.onTellTime) {
+                handlers.onTellTime();
+            }
+            return;
+        }
+
+        // ? or H = Help Cheatsheet
+        if ((key === '?' || lowerKey === 'h') && handlers.onHelp) {
+            event.preventDefault();
+            handlers.onHelp();
+            return;
+        }
+
+        // Legacy N (Next) and P (Prev) keys
+        if (lowerKey === 'n') {
+            event.preventDefault();
+            if (handlers.onNextQuestion) handlers.onNextQuestion();
+            else if (handlers.onNext) handlers.onNext();
+            return;
+        }
+
+        if (lowerKey === 'p') {
+            event.preventDefault();
+            if (handlers.onPrevQuestion) handlers.onPrevQuestion();
+            else if (handlers.onPrev) handlers.onPrev();
+            return;
         }
     };
 

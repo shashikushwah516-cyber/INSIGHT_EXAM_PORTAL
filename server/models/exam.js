@@ -40,6 +40,22 @@ const examQuestionSchema = new mongoose.Schema({
     topic: {
         type: String,
         default: 'General'
+    },
+    imageUrl: {
+        type: String,
+        default: ''
+    },
+    imageType: {
+        type: String,
+        default: ''
+    },
+    visualDescription: {
+        quick: { type: String, default: '' },
+        detailed: { type: String, default: '' }
+    },
+    visualAlt: {
+        type: String,
+        default: ''
     }
 });
 

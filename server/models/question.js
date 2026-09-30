@@ -55,6 +55,23 @@ const questionSchema = new mongoose.Schema({
     audioText: {
         type: String,
         default: ''
+    },
+    imageUrl: {
+        type: String,
+        default: ''
+    },
+    imageType: {
+        type: String,
+        enum: ['', 'pie-chart', 'bar-chart', 'line-graph', 'geometry-diagram', 'coordinate-graph', 'table-image', 'equation-image', 'circuit-diagram', 'diagram', 'general'],
+        default: ''
+    },
+    visualDescription: {
+        quick: { type: String, default: '' },
+        detailed: { type: String, default: '' }
+    },
+    visualAlt: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true

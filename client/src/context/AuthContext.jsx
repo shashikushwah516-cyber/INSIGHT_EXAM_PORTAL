@@ -72,6 +72,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (profileData) => {
+        const res = await authService.updateProfile(profileData);
+        if (res.success && res.user) {
+            setUser((prev) => (prev ? { ...prev, ...res.user } : res.user));
+            const stored = localStorage.getItem('insight_user');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    localStorage.setItem('insight_user', JSON.stringify({ ...parsed, ...res.user }));
+                } catch (e) {}
+            }
+        }
+        return res;
+    };
+
     const value = {
         user,
         token,
@@ -81,7 +96,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        updatePreferences
+        updatePreferences,
+        updateProfile
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

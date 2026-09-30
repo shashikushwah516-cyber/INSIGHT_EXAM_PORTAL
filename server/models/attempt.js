@@ -44,6 +44,34 @@ const subjectBreakdownSchema = new mongoose.Schema({
     accuracy: Number
 }, { _id: false });
 
+const securityEventSchema = new mongoose.Schema({
+    eventType: {
+        type: String,
+        enum: ['FULLSCREEN_EXIT', 'TAB_SWITCH', 'WINDOW_BLUR', 'PAGE_HIDDEN', 'NAVIGATION_ATTEMPT', 'REPEATED_FOCUS_LOSS', 'SECURITY_WARNING'],
+        required: true
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now
+    },
+    questionNumber: {
+        type: Number,
+        default: 1
+    },
+    remainingSeconds: {
+        type: Number,
+        default: 0
+    },
+    warningCount: {
+        type: Number,
+        default: 1
+    },
+    details: {
+        type: String,
+        default: ''
+    }
+}, { _id: false });
+
 const attemptSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -83,6 +111,14 @@ const attemptSchema = new mongoose.Schema({
         index: true
     },
     answers: [answerItemSchema],
+    securityEvents: {
+        type: [securityEventSchema],
+        default: []
+    },
+    securityWarningCount: {
+        type: Number,
+        default: 0
+    },
     score: {
         totalQuestions: { type: Number, default: 0 },
         attempted: { type: Number, default: 0 },

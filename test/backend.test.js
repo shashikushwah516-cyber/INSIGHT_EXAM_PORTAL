@@ -134,3 +134,35 @@ test('Practice questions check returns instant audio feedback and explanation', 
     assert.ok(typeof checkData.isCorrect === 'boolean');
     assert.ok(checkData.audioSpeech);
 });
+
+test('AI Assistant endpoint returns accessible response and respects exam integrity guardrail', async () => {
+    // 1. General platform assistance query
+    const res1 = await fetch(`${baseUrl}/api/ai/assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message: 'How do I navigate questions using the keyboard?',
+            isExamActive: false
+        })
+    });
+    const data1 = await res1.json();
+    assert.equal(res1.status, 200);
+    assert.equal(data1.success, true);
+    assert.ok(data1.reply);
+    assert.ok(data1.spokenText);
+
+    // 2. Exam integrity guardrail check: during active exam, direct question answers are prohibited
+    const res2 = await fetch(`${baseUrl}/api/ai/assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message: 'What is the answer to question 5?',
+            isExamActive: true
+        })
+    });
+    const data2 = await res2.json();
+    assert.equal(res2.status, 200);
+    assert.equal(data2.success, true);
+    assert.ok(data2.reply.includes('examination mode') || data2.reply.includes('integrity') || data2.reply.includes('disabled') || data2.reply.includes('prohibited'));
+});
+

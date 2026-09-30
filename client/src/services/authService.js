@@ -21,6 +21,30 @@ export const authService = {
         return apiClient.put('/auth/profile', profileData);
     },
 
+    forgotPassword: async (resetData) => {
+        return apiClient.post('/auth/forgot-password', resetData);
+    },
+
+    getStudents: async (params = {}) => {
+        return apiClient.get('/admin/students', { params });
+    },
+
+    getStudentById: async (id) => {
+        return apiClient.get(`/admin/students/${id}`);
+    },
+
+    createStudent: async (studentData) => {
+        return apiClient.post('/admin/students', studentData);
+    },
+
+    updateStudent: async (id, studentData) => {
+        return apiClient.put(`/admin/students/${id}`, studentData);
+    },
+
+    deleteStudent: async (id) => {
+        return apiClient.delete(`/admin/students/${id}`);
+    },
+
     logout: async () => {
         try {
             await apiClient.post('/auth/logout');

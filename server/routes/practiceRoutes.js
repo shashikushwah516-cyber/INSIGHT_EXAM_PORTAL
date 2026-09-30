@@ -1,12 +1,12 @@
 const express = require('express');
 const Question = require('../models/question');
 const PracticeAttempt = require('../models/practiceAttempt');
-const { protect } = require('../middleware/authMiddleLayer');
+const { protect, optionalProtect } = require('../middleware/authMiddleLayer');
 
 const router = express.Router();
 
 // GET /practice/questions - Fetch practice questions with filters
-router.get('/questions', protect, async (req, res) => {
+router.get('/questions', optionalProtect, async (req, res) => {
     try {
         const { subject, topic, difficulty, limit = 10 } = req.query;
         const filter = {};
@@ -58,7 +58,7 @@ router.get('/questions', protect, async (req, res) => {
 });
 
 // POST /practice/check - Instant check for interactive practice
-router.post('/check', protect, async (req, res) => {
+router.post('/check', optionalProtect, async (req, res) => {
     try {
         const { questionId, selectedOption } = req.body;
 
@@ -100,7 +100,7 @@ router.post('/check', protect, async (req, res) => {
 });
 
 // POST /practice/submit - Save practice attempt summary
-router.post('/submit', protect, async (req, res) => {
+router.post('/submit', optionalProtect, async (req, res) => {
     try {
         const {
             subject = 'General',
@@ -116,23 +116,26 @@ router.post('/submit', protect, async (req, res) => {
         const score = correct;
         const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
-        const practiceAttempt = await PracticeAttempt.create({
-            userId: req.user.id,
-            subject,
-            topic,
-            difficulty,
-            totalQuestions,
-            attempted,
-            correct,
-            incorrect,
-            score,
-            accuracy,
-            timeTakenSeconds
-        });
+        let practiceAttempt = null;
+        if (req.user && req.user.id) {
+            practiceAttempt = await PracticeAttempt.create({
+                userId: req.user.id,
+                subject,
+                topic,
+                difficulty,
+                totalQuestions,
+                attempted,
+                correct,
+                incorrect,
+                score,
+                accuracy,
+                timeTakenSeconds
+            });
+        }
 
         return res.status(201).json({
             success: true,
-            message: 'Practice session completed and saved.',
+            message: 'Practice session completed.',
             practiceAttempt
         });
     } catch (error) {
@@ -157,6 +160,9 @@ router.get('/history', protect, async (req, res) => {
         return res.status(200).json({
             success: true,
             count: history.length,
+            totalPracticed,
+            totalCorrect,
+            overallAccuracy,
             stats: {
                 totalSessions: history.length,
                 totalPracticed,
