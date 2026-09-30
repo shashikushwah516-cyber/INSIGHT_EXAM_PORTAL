@@ -109,7 +109,7 @@ export default function Login({ onLoginSuccess }) {
             <div className="w-full max-w-md">
                 {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex w-14 h-14 rounded-2xl bg-[var(--primary)] text-[var(--bg-primary)] items-center justify-center shadow-md mb-4 border border-[var(--border-color)]">
+                    <div className="inline-flex w-14 h-14 rounded-2xl bg-[var(--accent-color)] text-[var(--accent-text)] items-center justify-center shadow-md mb-4 border border-[var(--border-color)]">
                         <LogIn className="w-7 h-7 stroke-[2.5]" aria-hidden="true" />
                     </div>
                     <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
@@ -195,15 +195,26 @@ export default function Login({ onLoginSuccess }) {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-3 px-4 rounded-xl bg-[var(--primary)] text-[var(--bg-primary)] font-bold text-sm shadow-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                            <LogIn className="w-4 h-4" />
-                            <span>{isSubmitting ? 'Signing In...' : 'Sign In to Portal'}</span>
-                        </button>
+                        {/* LOGIN Action Button */}
+                        <div className="pt-2">
+                            <button
+                                id="login-submit-btn"
+                                type="submit"
+                                disabled={isSubmitting}
+                                aria-label={isSubmitting ? 'Authenticating, please wait...' : 'Log in to your account'}
+                                className="btn-primary w-full min-h-[3.25rem] py-3.5 px-6 rounded-xl font-extrabold text-base tracking-wider shadow-md transition-all duration-150 flex items-center justify-center gap-2.5 cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--focus-ring)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+                                style={{
+                                    backgroundColor: 'var(--accent-color)',
+                                    color: 'var(--accent-text)',
+                                    border: '2px solid var(--border-accent, transparent)'
+                                }}
+                            >
+                                <LogIn className="w-5 h-5 shrink-0" aria-hidden="true" />
+                                <span className="uppercase tracking-wider">
+                                    {isSubmitting ? 'Logging In...' : 'LOGIN'}
+                                </span>
+                            </button>
+                        </div>
                     </form>
 
                     {/* Quick Demo Credentials */}
@@ -217,7 +228,7 @@ export default function Login({ onLoginSuccess }) {
                                 onClick={() => handleInstantLogin('CAND101', 'candidate123', 'student')}
                                 className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--bg-surface)] border border-[var(--border-color)] text-left transition flex flex-col cursor-pointer"
                             >
-                                <span className="text-xs font-bold text-[var(--primary)] flex items-center gap-1">
+                                <span className="text-xs font-bold text-[var(--accent-color)] flex items-center gap-1">
                                     <User className="w-3 h-3" /> Student Demo
                                 </span>
                                 <span className="text-[10px] text-[var(--text-muted)] font-mono mt-0.5">CAND101</span>
@@ -236,12 +247,16 @@ export default function Login({ onLoginSuccess }) {
                         </div>
                     </div>
 
-                    {/* Register Link */}
+                    {/* Secondary Navigation Option */}
                     <div className="mt-6 pt-5 border-t border-[var(--border-color)] text-center">
                         <p className="text-sm text-[var(--text-secondary)]">
-                            New candidate?{' '}
-                            <Link to="/register" className="text-[var(--primary)] hover:underline font-bold inline-flex items-center gap-1 transition">
-                                Create an account <ArrowRight className="w-3.5 h-3.5" />
+                            Don’t have an account?{' '}
+                            <Link
+                                to="/register"
+                                id="login-to-register-link"
+                                className="text-[var(--accent-color)] hover:underline font-bold inline-flex items-center gap-1 transition focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] rounded-md px-1 py-0.5"
+                            >
+                                Register <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                             </Link>
                         </p>
                     </div>

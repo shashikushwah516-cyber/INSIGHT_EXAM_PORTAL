@@ -42,6 +42,13 @@ body.theme-clean-light,
   --info-color: #0284c7;
 
   --focus-ring: #2563eb;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-text: #ffffff;
+  --primary-subtle: rgba(37, 99, 235, 0.1);
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
   --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
 
@@ -82,6 +89,13 @@ body.theme-high-contrast-yellow,
   --info-color: #38bdf8;
 
   --focus-ring: #ffe600;
+  --primary: #ffe600;
+  --primary-hover: #ffd700;
+  --primary-text: #000000;
+  --primary-subtle: rgba(255, 230, 0, 0.15);
+  --danger: #f87171;
+  --warning: #facc15;
+  --success: #4ade80;
   --card-shadow: none;
   --card-shadow-hover: none;
 
@@ -124,6 +138,13 @@ body.theme-high-contrast-cyan,
   --info-color: #00f2fe;
 
   --focus-ring: #00f2fe;
+  --primary: #00f2fe;
+  --primary-hover: #38bdf8;
+  --primary-text: #030712;
+  --primary-subtle: rgba(0, 242, 254, 0.15);
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --success: #34d399;
   --card-shadow: 0 4px 20px -2px rgba(0, 242, 254, 0.12);
   --card-shadow-hover: 0 6px 24px -2px rgba(0, 242, 254, 0.2);
 
@@ -166,6 +187,13 @@ body.theme-standard-dark,
   --info-color: #38bdf8;
 
   --focus-ring: #38bdf8;
+  --primary: #38bdf8;
+  --primary-hover: #0284c7;
+  --primary-text: #090e1a;
+  --primary-subtle: rgba(56, 189, 248, 0.15);
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
   --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
   --card-shadow-hover: 0 8px 12px -2px rgb(0 0 0 / 0.4);
 
@@ -205,6 +233,13 @@ body.theme-soft-light,
   --info-color: #0369a1;
 
   --focus-ring: #c25e00;
+  --primary: #c25e00;
+  --primary-hover: #9a4800;
+  --primary-text: #ffffff;
+  --primary-subtle: rgba(194, 94, 0, 0.12);
+  --danger: #b91c1c;
+  --warning: #b45309;
+  --success: #15803d;
   --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
   --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08);
 

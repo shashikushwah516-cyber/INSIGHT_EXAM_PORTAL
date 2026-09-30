@@ -50,6 +50,14 @@ export default function Register() {
             return;
         }
 
+        if (rollNumber.trim().length < 3) {
+            const msg = 'Roll number must be at least 3 characters in length.';
+            setError(msg);
+            speak(msg);
+            announce(msg, 'assertive');
+            return;
+        }
+
         if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
             const msg = 'Please provide a valid email address format.';
             setError(msg);
@@ -123,7 +131,7 @@ export default function Register() {
             <div className="w-full max-w-xl">
                 {/* Brand / Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex w-14 h-14 rounded-2xl bg-[var(--primary)] text-[var(--bg-primary)] items-center justify-center shadow-md mb-4 border border-[var(--border-color)]">
+                    <div className="inline-flex w-14 h-14 rounded-2xl bg-[var(--accent-color)] text-[var(--accent-text)] items-center justify-center shadow-md mb-4 border border-[var(--border-color)]">
                         <UserPlus className="w-7 h-7 stroke-[2.5]" aria-hidden="true" />
                     </div>
                     <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
@@ -316,23 +324,38 @@ export default function Register() {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-3 px-4 rounded-xl bg-[var(--primary)] text-[var(--bg-primary)] font-bold text-sm shadow-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            <span>{isSubmitting ? 'Creating Account...' : 'Complete Registration'}</span>
-                        </button>
+                        {/* REGISTER Action Button */}
+                        <div className="pt-2">
+                            <button
+                                id="register-submit-btn"
+                                type="submit"
+                                disabled={isSubmitting}
+                                aria-label={isSubmitting ? 'Creating your account, please wait...' : 'Submit registration'}
+                                className="btn-primary w-full min-h-[3.25rem] py-3.5 px-6 rounded-xl font-extrabold text-base tracking-wider shadow-md transition-all duration-150 flex items-center justify-center gap-2.5 cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--focus-ring)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+                                style={{
+                                    backgroundColor: 'var(--accent-color)',
+                                    color: 'var(--accent-text)',
+                                    border: '2px solid var(--border-accent, transparent)'
+                                }}
+                            >
+                                <UserPlus className="w-5 h-5 shrink-0" aria-hidden="true" />
+                                <span className="uppercase tracking-wider">
+                                    {isSubmitting ? 'Creating Account...' : 'REGISTER'}
+                                </span>
+                            </button>
+                        </div>
                     </form>
 
-                    {/* Bottom Link */}
+                    {/* Secondary Navigation Option */}
                     <div className="mt-6 pt-6 border-t border-[var(--border-color)] text-center">
                         <p className="text-sm text-[var(--text-secondary)]">
-                            Already registered on Insight Exam Portal?{' '}
-                            <Link to="/login" className="text-[var(--primary)] hover:underline font-bold inline-flex items-center gap-1 transition">
-                                Sign In here <ArrowRight className="w-3.5 h-3.5" />
+                            Already have an account?{' '}
+                            <Link
+                                to="/login"
+                                id="register-to-login-link"
+                                className="text-[var(--accent-color)] hover:underline font-bold inline-flex items-center gap-1 transition focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] rounded-md px-1 py-0.5"
+                            >
+                                Sign In <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                             </Link>
                         </p>
                     </div>
